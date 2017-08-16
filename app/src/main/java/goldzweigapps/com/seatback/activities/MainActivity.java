@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity{
     private static final int BLUETOOTH_SCAN_REQUEST = 119;
     private static final int CHOOSE_SERVER_REQUEST = 120;
     private boolean isDeviceConnected = false;
+    private boolean isServiceBound = false;
     private CharSequence startChar = "*";
     private CharSequence endChar = "#";
     ArrayList<Integer> integerDataFull = new ArrayList<>();
@@ -125,7 +126,7 @@ public class MainActivity extends AppCompatActivity{
         //endregion fragment creation
 
         //region place data in pressure map
-        updatePressureMapValues(integerDataFull);
+//        updatePressureMapValues(integerDataFull);
         //endregion place data in pressure map
 
         //region toolbar
@@ -226,7 +227,7 @@ public class MainActivity extends AppCompatActivity{
                     public void onServiceDisconnected(ComponentName name) {
                     }
                 };
-                bindService(serviceIntent, timeServiceConnection, BIND_AUTO_CREATE);
+                isServiceBound = getApplicationContext().bindService(serviceIntent, timeServiceConnection, BIND_AUTO_CREATE);
                 //endregion timer service
             }
 
@@ -280,9 +281,13 @@ public class MainActivity extends AppCompatActivity{
         registerReceiver(timerReceiver, new IntentFilter(TimeService.COUNTDOWN_PACKAGE));
         SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
         String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
-        if( deviceMAC.length() > 0 && isDeviceConnected == false)
-        {
-            simpleBluetooth.connectToBluetoothDevice(deviceMAC);
+        try {
+            if (deviceMAC.length() > 0 && isDeviceConnected == false) {
+                simpleBluetooth.connectToBluetoothDevice(deviceMAC);
+            }
+        }
+        catch (IllegalStateException ex){
+            Log.d(TAG, "onStart IllegalStateException" + ex.getMessage());
         }
     }
     //endregion main running place
@@ -365,7 +370,7 @@ public class MainActivity extends AppCompatActivity{
     }
     //endregion menu, inflating "icons in toolbar"
 
-    //region bluetooth functions
+    //region bluetooth functions0
     private void setupBluetoothConnection() {
         simpleBluetooth = new SimpleBluetooth(this, this);
         simpleBluetooth.initializeSimpleBluetooth();
@@ -389,7 +394,6 @@ public class MainActivity extends AppCompatActivity{
                 } else {
                     simpleBluetooth.connectToBluetoothServer(deviceMacAddress);
                 }
-
             }
         }
     }
@@ -398,10 +402,13 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        simpleBluetooth.endSimpleBluetooth();
+        if( simpleBluetooth != null)
+            simpleBluetooth.endSimpleBluetooth();
         unregisterReceiver(timerReceiver);
-        mTimeService.onDestroy();
-        unbindService(timeServiceConnection);
+        if( mTimeService != null)
+            mTimeService.onDestroy();
+        if( timeServiceConnection != null && isServiceBound == true)
+            getApplicationContext().unbindService(timeServiceConnection);
 //        unbindService();
     }
 
@@ -430,7 +437,7 @@ public class MainActivity extends AppCompatActivity{
         UpdateTipsTask  myTask = new UpdateTipsTask ();
         myTask.execute(dataReady);
 
-        if (homeFragment.positionImageView != null) {
+        if (homeFragment.positionImageView != null && !MainActivity.this.isDestroyed()) {
             Integer imageAfterComparing = Utils.getImageAfterComparing(dataReady);
             if (imageAfterComparing != null) {
                 Glide.with(MainActivity.this)
