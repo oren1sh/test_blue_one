@@ -1,14 +1,32 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
+    }
+
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+}
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
+
+    def Properties versionProps = new Properties()
+    def versionPropsFile = file('version.properties')
+    if(versionPropsFile.exists())
+        versionProps.load(new FileInputStream(versionPropsFile))
+    def code = (versionProps['VERSION_CODE'] ?: "0").toInteger() + 1
+    versionProps['VERSION_CODE'] = code.toString()
+    versionProps.store(versionPropsFile.newWriter(), null)
+
     defaultConfig {
         applicationId "goldzweigapps.com.seatback"
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 3
+        versionCode code
         versionName "1.1"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -45,7 +63,7 @@ dependencies {
     //joda time for presenting the current time in the clock: http://www.joda.org/joda-time/
     compile 'joda-time:joda-time:2.9.7'
     //crashlytics crash remote reporter to help fix bugs from remote: https://fabric.io/kits
-    compile('com.crashlytics.sdk.android:crashlytics:2.6.7@aar') {
+    compile('com.crashlytics.sdk.android:crashlytics:2.6.8@aar') {
         transitive = true;
     }
 

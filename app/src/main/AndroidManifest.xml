@@ -24,9 +24,9 @@
         <!-- crashlytics api key -->
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="e009a9b8d7f77fc4978beab18a724ba254280741" />
+            android:value="24604424f5eadd39e0f586963e025492bc58988f" />
 
-        <activity android:name=".activities.SplashScreeen">
+        <activity android:name=".activities.SplashScreeen"  android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
