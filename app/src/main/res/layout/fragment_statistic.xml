@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/_16sdp"
+    android:orientation="vertical"
+    android:background="@color/md_white">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
+        android:layout_gravity="center_horizontal">
+
+        <Button
+            android:id="@+id/button_day"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/shows_day_statistics"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:text="@string/day"
+            android:background="@drawable/button_side_left" />
+
+        <Button
+            android:id="@+id/button_week"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/shows_week_statistics"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:text="@string/week"
+            android:background="@drawable/button_center" />
+
+        <Button
+            android:id="@+id/button_month"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/month"
+            android:contentDescription="@string/shows_month_statistics"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:background="@drawable/button_center" />
+
+        <Button
+            android:id="@+id/button_all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/all"
+            android:contentDescription="@string/shows_all_statistics"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:background="@drawable/button_side_right" />
+    </LinearLayout>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/image_statistics"
+        android:contentDescription="@string/shows_statistics_image"
+        />
+</LinearLayout>

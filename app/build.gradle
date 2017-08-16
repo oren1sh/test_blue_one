@@ -1,0 +1,53 @@
+apply plugin: 'com.android.application'
+apply plugin: 'io.fabric'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+    defaultConfig {
+        applicationId "goldzweigapps.com.seatback"
+        minSdkVersion 21
+        targetSdkVersion 25
+        versionCode 3
+        versionName "1.1"
+        vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+repositories {
+    maven { url "https://jitpack.io" }
+    maven { url 'https://maven.fabric.io/public' }
+}
+
+dependencies {
+    // test libraries comes build in
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    //support libraries
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-beta5'
+
+    //my own library for material design tabs: https://github.com/gilgoldzweig/EasyTabs
+    compile'com.github.gilgoldzweig:EasyTab:1.1.2'
+    //glide image loading: https://github.com/bumptech/glide
+    compile 'com.github.bumptech.glide:glide:3.7.0'
+    //bluetooth: https://github.com/DeveloperPaul123/SimpleBluetoothLibrary
+    compile 'com.github.DeveloperPaul123:SimpleBluetoothLibrary:1.5.1'
+    //joda time for presenting the current time in the clock: http://www.joda.org/joda-time/
+    compile 'joda-time:joda-time:2.9.7'
+    //crashlytics crash remote reporter to help fix bugs from remote: https://fabric.io/kits
+    compile('com.crashlytics.sdk.android:crashlytics:2.6.7@aar') {
+        transitive = true;
+    }
+
+    testCompile 'junit:junit:4.12'
+}

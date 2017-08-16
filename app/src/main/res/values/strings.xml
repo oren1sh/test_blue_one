@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">SeatBack</string>
+    <string name="info">info</string>
+    <string name="week">Week</string>
+    <string name="shows_day_statistics">shows day statistics</string>
+    <string name="day">Day</string>
+    <string name="shows_week_statistics">shows week statistics</string>
+    <string name="shows_month_statistics">shows month statistics</string>
+    <string name="shows_all_statistics">shows all statistics</string>
+    <string name="all">All</string>
+    <string name="month">Month</string>
+    <string name="shows_statistics_image">shows_statistics_image</string>
+    <string name="bluetooth">Connect to device</string>
+</resources>
