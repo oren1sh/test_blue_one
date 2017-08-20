@@ -108,7 +108,7 @@ public class CircleTimerView extends View {
     // TimerTask
     private Timer timer = new Timer();
 
-    private TimerTask timerTask;
+//    private TimerTask timerTask;
 
     private Handler handler = new Handler() {
         @Override

@@ -1,6 +1,7 @@
 package goldzweigapps.com.seatback.activities;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -30,7 +31,6 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.crashlytics.android.Crashlytics;
 import com.devpaul.bluetoothutillib.SimpleBluetooth;
 import com.devpaul.bluetoothutillib.dialogs.DeviceDialog;
 import com.devpaul.bluetoothutillib.utils.SimpleBluetoothListener;
@@ -39,7 +39,15 @@ import com.devpaul.bluetoothutillib.utils.BluetoothUtility;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.android.volley.VolleyError;
+import com.android.volley.Response;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import goldzweigapps.com.seatback.R;
+import goldzweigapps.com.seatback.application.SeatBackApplication;
 import goldzweigapps.com.seatback.fragments.HomeFragment;
 import goldzweigapps.com.seatback.fragments.StatisticFragment;
 import goldzweigapps.com.seatback.fragments.TipsFragment;
@@ -50,7 +58,6 @@ import goldzweigapps.com.seatback.utils.Utils;
 import goldzweigapps.tabs.Builder.EasyTabsBuilder;
 import goldzweigapps.tabs.Items.TabItem;
 import goldzweigapps.tabs.View.EasyTabs;
-import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity{
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -75,11 +82,14 @@ public class MainActivity extends AppCompatActivity{
     private static final int CHOOSE_SERVER_REQUEST = 120;
     private boolean isDeviceConnected = false;
     private boolean isServiceBound = false;
+    private boolean isBluetoothInitized = false;
+    private String connectedMAC = "";
     private CharSequence startChar = "*";
     private CharSequence endChar = "#";
     ArrayList<Integer> integerDataFull = new ArrayList<>();
     String dataFull = "";
     private Menu menu = null;
+    SeatBackApplication helper = SeatBackApplication.getInstance();
     //endregion bluetooth
 
     //region views
@@ -88,9 +98,8 @@ public class MainActivity extends AppCompatActivity{
     //endregion views
 
     //region fragments
-    HomeFragment homeFragment;
+//    HomeFragment homeFragment;
     WorkoutFragment workoutFragment;
-    TipsFragment tipsFragment;
     StatisticFragment statisticFragment;
     //endregion fragments
     //endregion variables
@@ -119,9 +128,8 @@ public class MainActivity extends AppCompatActivity{
 
         //region fragment creation
         //create the fragments
-        homeFragment = new HomeFragment();
+//        homeFragment = new HomeFragment();
         workoutFragment = new WorkoutFragment();
-        tipsFragment = new TipsFragment();
         statisticFragment = new StatisticFragment();
         //endregion fragment creation
 
@@ -138,9 +146,9 @@ public class MainActivity extends AppCompatActivity{
         //initializing the tabs library
         EasyTabsBuilder
                 .with(mEasyTabs)
-                .addTabs(new TabItem(homeFragment, "Home"),
+                .addTabs(new TabItem(new HomeFragment(), "Home"),
                         new TabItem(workoutFragment, "Workout"),
-                        new TabItem(tipsFragment, "Tips"),
+                        new TabItem(new TipsFragment(), "Tips"),
                         new TabItem(statisticFragment, "Statistic"))
                 .addIcons(R.drawable.ic_home_white_24dp,
                         R.drawable.ic_workout_white_24dp,
@@ -155,6 +163,9 @@ public class MainActivity extends AppCompatActivity{
         //endregion tabs
 
         //region bluetooth
+
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(mReceiver, filter);
 
         //trying to connect automatic to bluetooth device
         setupBluetoothConnection();
@@ -173,7 +184,7 @@ public class MainActivity extends AppCompatActivity{
                     }
                 } else {
                     //changing the data from the string in order to update the ui
-                    changeDataFromString(dataFull);
+//                    changeDataFromString(dataFull);
                     data = data.replaceAll("[\\\r|\\\n]", "");
                     String[] parts = data.split(endChar.toString());
                     if( parts.length > 0) {
@@ -203,13 +214,14 @@ public class MainActivity extends AppCompatActivity{
                         Snackbar.LENGTH_LONG)
                         .show();
                 isDeviceConnected = true;
-                MyTask myTask = new MyTask();
+                UpdateBluetoothMenuTask myTask = new UpdateBluetoothMenuTask();
                 myTask.execute();
 
                 SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("LAST_MAC", device.getAddress());
                 editor.commit();
+                connectedMAC = device.getAddress();
 
                 //running the timer service when the device is connected
 
@@ -240,7 +252,7 @@ public class MainActivity extends AppCompatActivity{
                         Snackbar.LENGTH_LONG)
                         .show();
                 isDeviceConnected = false;
-                MyTask myTask = new MyTask();
+                UpdateBluetoothMenuTask myTask = new UpdateBluetoothMenuTask();
                 myTask.execute();
             }
 
@@ -248,7 +260,7 @@ public class MainActivity extends AppCompatActivity{
             public void onDiscoveryStarted() {
                 super.onDiscoveryStarted();
                 isDeviceConnected = false;
-                MyTask myTask = new MyTask();
+                UpdateBluetoothMenuTask myTask = new UpdateBluetoothMenuTask();
                 myTask.execute();
             }
 
@@ -256,7 +268,7 @@ public class MainActivity extends AppCompatActivity{
             public void onDiscoveryFinished() {
                 super.onDiscoveryFinished();
                 isDeviceConnected = false;
-                MyTask myTask = new MyTask();
+                UpdateBluetoothMenuTask myTask = new UpdateBluetoothMenuTask();
                 myTask.execute();
             }
 
@@ -282,7 +294,7 @@ public class MainActivity extends AppCompatActivity{
         SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
         String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
         try {
-            if (deviceMAC.length() > 0 && isDeviceConnected == false) {
+            if (deviceMAC.length() > 0 && !isDeviceConnected && isBluetoothInitized) {
                 simpleBluetooth.connectToBluetoothDevice(deviceMAC);
             }
         }
@@ -299,6 +311,13 @@ public class MainActivity extends AppCompatActivity{
             if (intent.getExtras() != null) {
                 long millisUntilFinished = intent.getLongExtra("countdown", 0);
                 Log.d(TAG, "onReceive: " + millisUntilFinished);
+                List<Fragment> fragments = getSupportFragmentManager().getFragments();
+                HomeFragment homeFragment = null;
+                for(Fragment f: fragments){
+                    if( f instanceof HomeFragment)
+                        homeFragment = (HomeFragment)f;
+                }
+                if( homeFragment != null)
                 if (homeFragment.circleTimerView != null) {
                     homeFragment.circleTimerView.setCurrentTime((int) millisUntilFinished);
                 }
@@ -372,13 +391,10 @@ public class MainActivity extends AppCompatActivity{
 
     //region bluetooth functions0
     private void setupBluetoothConnection() {
-        simpleBluetooth = new SimpleBluetooth(this, this);
-        simpleBluetooth.initializeSimpleBluetooth();
+        if( simpleBluetooth == null)
+            simpleBluetooth = new SimpleBluetooth(this, this);
+        isBluetoothInitized = simpleBluetooth.initializeSimpleBluetooth();
         simpleBluetooth.setInputStreamType(BluetoothUtility.InputStreamType.BUFFERED);
-//        bluetoothDevice = simpleBluetooth.getBluetoothUtility().findDeviceByName("HC-06");
-//        bluetoothDevice.setPin(new byte[]{1, 2, 3, 4});
-//        bluetoothDevice.createBond();
-//        simpleBluetooth.connectToBluetoothDevice(bluetoothDevice.getAddress());
     }
     //endregion bluetooth functions
 
@@ -386,14 +402,30 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == BLUETOOTH_SCAN_REQUEST || requestCode == CHOOSE_SERVER_REQUEST) {
+         if (requestCode == BLUETOOTH_SCAN_REQUEST || requestCode == CHOOSE_SERVER_REQUEST) {
             if (resultCode == RESULT_OK) {
-                String deviceMacAddress = data.getStringExtra(DeviceDialog.DEVICE_DIALOG_DEVICE_ADDRESS_EXTRA);
-                if (requestCode == BLUETOOTH_SCAN_REQUEST) {
-                    simpleBluetooth.connectToBluetoothDevice(deviceMacAddress);
-                } else {
-                    simpleBluetooth.connectToBluetoothServer(deviceMacAddress);
+                if( isBluetoothInitized == false)
+                    setupBluetoothConnection();
+                if( isBluetoothInitized == true) {
+                    String deviceMacAddress = data.getStringExtra(DeviceDialog.DEVICE_DIALOG_DEVICE_ADDRESS_EXTRA);
+                    if (requestCode == BLUETOOTH_SCAN_REQUEST) {
+                        simpleBluetooth.connectToBluetoothDevice(deviceMacAddress);
+                    } else {
+                        simpleBluetooth.connectToBluetoothServer(deviceMacAddress);
+                    }
                 }
+            }
+        }
+        if( requestCode == 1001 && resultCode == RESULT_OK){
+            SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+            String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
+            try {
+                if (deviceMAC.length() > 0 && isDeviceConnected == false && isBluetoothInitized) {
+                    simpleBluetooth.connectToBluetoothDevice(deviceMAC);
+                }
+            }
+            catch (IllegalStateException ex){
+                Log.d(TAG, "onStart IllegalStateException" + ex.getMessage());
             }
         }
     }
@@ -409,6 +441,7 @@ public class MainActivity extends AppCompatActivity{
             mTimeService.onDestroy();
         if( timeServiceConnection != null && isServiceBound == true)
             getApplicationContext().unbindService(timeServiceConnection);
+        unregisterReceiver(mReceiver);
 //        unbindService();
     }
 
@@ -434,19 +467,36 @@ public class MainActivity extends AppCompatActivity{
 
             }
         }
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("sensorsData", data);
+            jsonObject.put("seatback_id", connectedMAC);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        // Instantiate the RequestQueue.
+        String url ="http://10.0.0.5:10010/updateData";
+
+        // Request a string response from the provided URL.
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(url, jsonObject,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // Display the first 500 characters of the response string.
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        // Add the request to the RequestQueue.
+        helper.add(jsonObjectRequest);
+
         UpdateTipsTask  myTask = new UpdateTipsTask ();
         myTask.execute(dataReady);
 
-        if (homeFragment.positionImageView != null && !MainActivity.this.isDestroyed()) {
-            Integer imageAfterComparing = Utils.getImageAfterComparing(dataReady);
-            if (imageAfterComparing != null) {
-                Glide.with(MainActivity.this)
-                        .load(imageAfterComparing)
-
-                        .into(homeFragment.positionImageView);
-
-            }
-        }
       return dataReady;
     }
 
@@ -456,7 +506,7 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    class MyTask extends AsyncTask<Void, Void, Void>
+    class UpdateBluetoothMenuTask extends AsyncTask<Void, Void, Void>
     {
 
         @Override
@@ -481,18 +531,32 @@ public class MainActivity extends AppCompatActivity{
         @Override
         protected void onPostExecute(ArrayList<Integer> data) {
             List<Fragment> fragments = getSupportFragmentManager().getFragments();
-            int fragmentIndex = fragments.indexOf(tipsFragment);
-            if( fragmentIndex >= 0){
-                TipsFragment tipsFragment = (TipsFragment)fragments.get(fragmentIndex);
-                if (tipsFragment != null)
-                    if (tipsFragment.bottomPressureMap != null && tipsFragment.topPressureMap != null) {
+            TipsFragment tipsFragment = null;
+            HomeFragment homeFragment = null;
+            for(Fragment f: fragments){
+                if( f instanceof TipsFragment)
+                    tipsFragment = (TipsFragment)f;
+                if( f instanceof HomeFragment)
+                    homeFragment = (HomeFragment)f;
+            }
+            if (tipsFragment != null)
+                if (tipsFragment.bottomPressureMap != null && tipsFragment.topPressureMap != null) {
 
-                        tipsFragment.bottomPressureMap.setTop(false);
-                        tipsFragment.bottomPressureMap.setColors(data);
+                    tipsFragment.bottomPressureMap.setTop(false);
+                    tipsFragment.bottomPressureMap.setColors(data);
 
-                        tipsFragment.topPressureMap.setTop(true);
-                        tipsFragment.topPressureMap.setColors(data);
-                    }
+                    tipsFragment.topPressureMap.setTop(true);
+                    tipsFragment.topPressureMap.setColors(data);
+                }
+
+            if( homeFragment != null)
+            if (homeFragment.positionImageView != null && !MainActivity.this.isDestroyed()) {
+                Integer imageAfterComparing = Utils.getImageAfterComparing(data);
+                if (imageAfterComparing != null) {
+                    Glide.with(MainActivity.this)
+                            .load(imageAfterComparing)
+                            .into(homeFragment.positionImageView);
+                }
             }
         }
 
@@ -502,19 +566,35 @@ public class MainActivity extends AppCompatActivity{
         }
 
     }
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
 
-    private void updatePressureMapValues(List<Integer> colors) {
-        //checking if the views are not null
-        if (tipsFragment.bottomPressureMap != null && tipsFragment.topPressureMap != null) {
-            //informing the view that its in the top so he will start from the begging
-            tipsFragment.topPressureMap.setTop(true);
-            //placing the colors
-            tipsFragment.topPressureMap.setColors(colors);
-            //informing the view that its not in the top so he will start after 36 colors
-            tipsFragment.bottomPressureMap.setTop(false);
-            //placing the colors
-            tipsFragment.bottomPressureMap.setColors(colors);
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                        BluetoothAdapter.ERROR);
+                switch (state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        isDeviceConnected = false;
+                        UpdateBluetoothMenuTask myTask = new UpdateBluetoothMenuTask();
+                        myTask.execute();
+
+                        setupBluetoothConnection();
+                        Log.d(TAG,"Bluetooth off");
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_OFF:
+                        Log.d(TAG,"Turning Bluetooth off...");
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        Log.d(TAG,"Bluetooth on");
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_ON:
+                        Log.d(TAG,"Turning Bluetooth on...");
+                        break;
+                }
+            }
         }
-    }
+    };
 }
 

@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#f7fff7">
-
+    android:background="#f7fff7"
+    android:id="@+id/tips_fragment">
 
     <goldzweigapps.com.seatback.views.PressureMap
         android:id="@+id/pressure_map_top"
