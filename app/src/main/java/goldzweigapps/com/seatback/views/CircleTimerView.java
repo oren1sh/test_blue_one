@@ -26,6 +26,7 @@ import org.joda.time.format.PeriodFormatterBuilder;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import goldzweigapps.com.seatback.R;
 import goldzweigapps.com.seatback.utils.ColorUtils;
 
 public class CircleTimerView extends View {
@@ -247,7 +248,7 @@ public class CircleTimerView extends View {
                 .appendSeparator(":")
                 .appendSeconds()
                 .toFormatter();
-        mHintText = "Sitting time";
+        mHintText = getResources().getString(R.string.circle_Sitting_time);
 
         // Solve the target version related to shadow
         // setLayerType(View.LAYER_TYPE_SOFTWARE, null); // use this, when targetSdkVersion is greater than or equal to api 14

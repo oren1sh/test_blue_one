@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_toLeftOf="@id/pressure_map_top"
         android:layout_marginTop="@dimen/_70sdp"
-        android:text="Back"
+        android:text="@string/sensors_back"
         android:textSize="40sp"/>
     <goldzweigapps.com.seatback.views.PressureMap
         android:id="@+id/pressure_map_bottom"
@@ -33,7 +33,7 @@
         android:layout_below="@+id/pressure_map_top"
         android:layout_centerHorizontal="true"
         android:layout_toLeftOf="@id/pressure_map_bottom"
-        android:text="Seat"
+        android:text="@string/sensors_seat"
         android:layout_marginTop="@dimen/_50sdp"
         android:textSize="40sp"
         />

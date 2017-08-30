@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     android:padding="@dimen/_16sdp"
     android:orientation="vertical"
-    android:background="@color/md_white">
+    android:background="@color/md_white"
+    android:id="@+id/statistics_layout">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -49,10 +50,25 @@
             style="@style/Base.Widget.AppCompat.Button.Borderless"
             android:background="@drawable/button_side_right" />
     </LinearLayout>
-    <ImageView
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/image_statistics"
-        android:contentDescription="@string/shows_statistics_image"
-        />
+        android:id="@+id/charts">
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/chart1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/chart2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+    </RelativeLayout>
+    <!--<ImageView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:id="@+id/image_statistics"-->
+        <!--android:contentDescription="@string/shows_statistics_image"-->
+        <!--/>-->
 </LinearLayout>

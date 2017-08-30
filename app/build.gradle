@@ -46,16 +46,15 @@ repositories {
 
 dependencies {
     // test libraries comes build in
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     //support libraries
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-beta5'
-
     //my own library for material design tabs: https://github.com/gilgoldzweig/EasyTabs
-    compile'com.github.gilgoldzweig:EasyTab:1.1.2'
+    compile 'com.github.gilgoldzweig:EasyTab:1.1.2'
     //glide image loading: https://github.com/bumptech/glide
     compile 'com.github.bumptech.glide:glide:3.7.0'
     //bluetooth: https://github.com/DeveloperPaul123/SimpleBluetoothLibrary
@@ -67,5 +66,7 @@ dependencies {
         transitive = true;
     }
     compile 'com.mcxiaoke.volley:library:1.0.19'
+    compile 'com.github.PhilJay:MPAndroidChart:v3.0.2'
     testCompile 'junit:junit:4.12'
+    compile files('libs/YouTubeAndroidPlayerApi.jar')
 }

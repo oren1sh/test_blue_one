@@ -1,11 +1,13 @@
 package goldzweigapps.com.seatback.activities;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -13,15 +15,18 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v4.view.ViewCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -30,6 +35,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.bumptech.glide.Glide;
 import com.devpaul.bluetoothutillib.SimpleBluetooth;
 import com.devpaul.bluetoothutillib.dialogs.DeviceDialog;
@@ -43,6 +51,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.Response;
 import com.android.volley.toolbox.JsonObjectRequest;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -83,13 +92,15 @@ public class MainActivity extends AppCompatActivity{
     private boolean isDeviceConnected = false;
     private boolean isServiceBound = false;
     private boolean isBluetoothInitized = false;
-    private String connectedMAC = "";
+    private boolean packetStarted = false;
     private CharSequence startChar = "*";
     private CharSequence endChar = "#";
     ArrayList<Integer> integerDataFull = new ArrayList<>();
     String dataFull = "";
     private Menu menu = null;
     SeatBackApplication helper = SeatBackApplication.getInstance();
+    private static CountDownTimer myCountdownTimer;
+    public static boolean didShowError = false;
     //endregion bluetooth
 
     //region views
@@ -176,6 +187,18 @@ public class MainActivity extends AppCompatActivity{
             public void onBluetoothDataReceived(byte[] bytes, String data) {
                 super.onBluetoothDataReceived(bytes, data);
                 Log.d(TAG, "onBluetoothDataReceived: " + data);
+                if( !packetStarted){
+                    if (!data.contains(startChar)) return;
+                    // need to escape regular expression special characters, such as *.
+                    // in case the starChar will change to something which will be different from
+                    // a special characters, than the below line should be change to remove the escape sequence.
+                    String[] parts = data.split("\\"+startChar.toString());
+                    if( parts.length > 0)
+                        data = parts[0];
+                    if( parts.length == 2)
+                        data = parts[1];
+                    packetStarted = true;
+                }
                 if (!data.contains(endChar)) {
                     if (data.contains(startChar)) {
                        dataFull += data;
@@ -214,6 +237,7 @@ public class MainActivity extends AppCompatActivity{
                         Snackbar.LENGTH_LONG)
                         .show();
                 isDeviceConnected = true;
+                packetStarted = false;
                 UpdateBluetoothMenuTask myTask = new UpdateBluetoothMenuTask();
                 myTask.execute();
 
@@ -221,7 +245,7 @@ public class MainActivity extends AppCompatActivity{
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("LAST_MAC", device.getAddress());
                 editor.commit();
-                connectedMAC = device.getAddress();
+                Utils.setConnectecMAC(device.getAddress());
 
                 //running the timer service when the device is connected
 
@@ -252,6 +276,7 @@ public class MainActivity extends AppCompatActivity{
                         Snackbar.LENGTH_LONG)
                         .show();
                 isDeviceConnected = false;
+
                 UpdateBluetoothMenuTask myTask = new UpdateBluetoothMenuTask();
                 myTask.execute();
             }
@@ -451,12 +476,25 @@ public class MainActivity extends AppCompatActivity{
         if (data == null) {
             return null;
         }
+        String sensorsData = "";
         //remove the start tag and the end tag from the full string
         data = data.replace("*", "");
         data = data.replace(",#", "");
+        String command  = "";
+        String recordLength = "";
         //splitting the full string by , to get the values
         for (String number : data.split(",")) {
-            //verifying that the number in not null ir empty
+//            if( command.length() == 0){
+//                command = number;
+//                continue;
+//            }
+//            if( command.equals("a") && recordLength.length() == 0 ){
+//                recordLength = number;
+//                Log.d(TAG, "command a, recordLength="+recordLength);
+//                continue;
+//            }
+            sensorsData += number+",";
+            //verifying that the number in not null or empty
             if (!(number == null || number.isEmpty())) {
                 //trying to convert the string into an int
                 try {
@@ -464,23 +502,25 @@ public class MainActivity extends AppCompatActivity{
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
-
             }
         }
 
+        // updating the server with the data record
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("sensorsData", data);
-            jsonObject.put("seatback_id", connectedMAC);
+            jsonObject.put("sensorsData", sensorsData);
+            jsonObject.put("seatback_id", Utils.getConnectecMAC());
+            int posture = Utils.calculatePosture(dataReady.subList(0,72));
+            jsonObject.put("posture", Utils.getPostureName(posture));
+            jsonObject.put("user_id", Utils.getAdpaterAddress());
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
         // Instantiate the RequestQueue.
-        String url ="http://10.0.0.5:10010/updateData";
 
         // Request a string response from the provided URL.
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(url, jsonObject,
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Utils.getServerURL() + "/updateData", jsonObject,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -489,13 +529,36 @@ public class MainActivity extends AppCompatActivity{
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                if( didShowError == false) {
+                    DialogFragment dialog = new YesNoDialog();
+                    Bundle args = new Bundle();
+                    args.putString(YesNoDialog.ARG_TITLE, "Error");
+                    String errorMsg = error.toString() + " " + Utils.getServerURL() + " " + Utils.getConnectecMAC();
+                    args.putString(YesNoDialog.ARG_MESSAGE, errorMsg);
+                    dialog.setArguments(args);
+                    List<Fragment> fragments = getSupportFragmentManager().getFragments();
+                    HomeFragment homeFragment = null;
+                    for (Fragment f : fragments) {
+                        if (f instanceof HomeFragment)
+                            homeFragment = (HomeFragment) f;
+                    }
+
+
+                    dialog.setTargetFragment(homeFragment, 100);
+                    dialog.show(getSupportFragmentManager(), "tag");
+                    didShowError = true;
+                }
             }
         });
         // Add the request to the RequestQueue.
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         helper.add(jsonObjectRequest);
 
         UpdateTipsTask  myTask = new UpdateTipsTask ();
-        myTask.execute(dataReady);
+        myTask.execute(dataReady.subList(0,72));
 
       return dataReady;
     }
@@ -517,19 +580,43 @@ public class MainActivity extends AppCompatActivity{
         @Override
         protected void onPostExecute(Void aVoid) {
             if( menu != null) {
-                if (isDeviceConnected == true)
+                if (isDeviceConnected == true) {
                     menu.getItem(0).setIcon(R.drawable.ic_bluetooth_connected_white_24dp);
-                else
+                    if( myCountdownTimer != null)
+                        myCountdownTimer.cancel();
+                    myCountdownTimer = null;
+                }
+                else {
                     menu.getItem(0).setIcon(R.drawable.ic_bluetooth_white_24dp);
+                    // start a periodic task, trying to connect to the Seatback device
+                    if( myCountdownTimer == null)
+                    myCountdownTimer =    new CountDownTimer(1800000, 10000) {
+                        public void onTick(long millisUntilFinished) {
+                            SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+                            String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
+                            try {
+                                if (deviceMAC.length() > 0 && !isDeviceConnected && isBluetoothInitized) {
+                                    simpleBluetooth.connectToBluetoothDevice(deviceMAC);
+                                }
+                            }
+                            catch (IllegalStateException ex){
+                                Log.d(TAG, "onStart IllegalStateException" + ex.getMessage());
+                            }
+                        }
+
+                        public void onFinish() {
+                        }
+                    }.start();
+                }
             }
         }
     }
 
-    class UpdateTipsTask extends AsyncTask<ArrayList<Integer>, Void, ArrayList<Integer>>
+    class UpdateTipsTask extends AsyncTask<List<Integer>, Void, List<Integer>>
     {
 
         @Override
-        protected void onPostExecute(ArrayList<Integer> data) {
+        protected void onPostExecute(List<Integer> data) {
             List<Fragment> fragments = getSupportFragmentManager().getFragments();
             TipsFragment tipsFragment = null;
             HomeFragment homeFragment = null;
@@ -561,7 +648,7 @@ public class MainActivity extends AppCompatActivity{
         }
 
         @Override
-        protected ArrayList<Integer> doInBackground(ArrayList<Integer>... params) {
+        protected List<Integer> doInBackground(List<Integer>... params) {
             return params[0];
         }
 
@@ -596,5 +683,45 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     };
+    public static class YesNoDialog extends DialogFragment
+    {
+        public static final String ARG_TITLE = "YesNoDialog.Title";
+        public static final String ARG_MESSAGE = "YesNoDialog.Message";
+
+        public YesNoDialog()
+        {
+
+        }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState)
+        {
+            Bundle args = getArguments();
+            String title = args.getString(ARG_TITLE);
+            String message = args.getString(ARG_MESSAGE);
+
+            return new AlertDialog.Builder(getActivity())
+                    .setTitle(title)
+                    .setMessage(message)
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which)
+                        {
+                            didShowError = false;
+                            getTargetFragment().onActivityResult(getTargetRequestCode(), 102, null);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which)
+                        {
+                            getTargetFragment().onActivityResult(getTargetRequestCode(), 101, null);
+                        }
+                    })
+                    .create();
+        }
+    }
 }
 
