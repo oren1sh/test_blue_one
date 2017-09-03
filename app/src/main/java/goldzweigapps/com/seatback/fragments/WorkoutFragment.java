@@ -61,17 +61,17 @@ public class WorkoutFragment extends Fragment implements View.OnClickListener{
         mExerciseBottomRight = (ImageView) view.findViewById(R.id.img_exercise_bottom_right);
         mExerciseBottomRight.setOnClickListener(this);
 
-        Glide.with(context).load(R.drawable.twistbody).into(mExerciseTopMiddle);
-        Glide.with(context).load(R.drawable.carpal).into(mExerciseTopRight);
-        Glide.with(context).load(R.drawable.twisthand).into(mExerciseTopLeft);
+        Glide.with(context).load(R.drawable.lowback).into(mExerciseTopMiddle);
+        Glide.with(context).load(R.drawable.restup).into(mExerciseTopRight);
+        Glide.with(context).load(R.drawable.restdown).into(mExerciseTopLeft);
 
-        Glide.with(context).load(R.drawable.lowback).into(mExerciseMiddleMiddle);
-        Glide.with(context).load(R.drawable.restup).into(mExerciseMiddleRightMost);
-        Glide.with(context).load(R.drawable.twisthand).into(mExerciseMiddleLeft);
+        Glide.with(context).load(R.drawable.shoulderup).into(mExerciseMiddleMiddle);
+        Glide.with(context).load(R.drawable.handsup).into(mExerciseMiddleRightMost);
+        Glide.with(context).load(R.drawable.twistneck).into(mExerciseMiddleLeft);
 
-        Glide.with(context).load(R.drawable.twistneck).into(mExerciseBottomLeft);
-        Glide.with(context).load(R.drawable.shoulderup).into(mExerciseBottomMiddle);
-        Glide.with(context).load(R.drawable.restdown).into(mExerciseBottomRight);
+        Glide.with(context).load(R.drawable.twisthand).into(mExerciseBottomLeft);
+        Glide.with(context).load(R.drawable.twistbody).into(mExerciseBottomMiddle);
+        Glide.with(context).load(R.drawable.carpal).into(mExerciseBottomRight);
 
     }
 
