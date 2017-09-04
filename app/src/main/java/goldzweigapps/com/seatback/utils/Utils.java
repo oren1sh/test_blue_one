@@ -23,13 +23,42 @@ import goldzweigapps.com.seatback.R;
 public class Utils {
     private static final String TAG = Utils.class.getSimpleName();
     private static String connectedMAC = "";
-    private static final String[] postureNames = {"standing", "good", "bending", "slouching", "leg", "leg", "unknown"};
+    private static final String[] postureNames = {"standing", "good", "bending forward", "slump", "legonleg right", "legonleg left", "unequal right", "unequal left", "unknown"};
 
     public static String getPostureName(int postureIndex){
-        if( postureIndex >= postureNames.length)
+// 0=standing // 1=good // 2=banding foward // 3= slump // 4= legonleg right //5= legonleg left// 6= unequal right //7= unequal left //8=Unknown
+        if( postureIndex > postureNames.length)
             return "Unknown";
         else
             return postureNames[postureIndex];
+    }
+
+    @Nullable
+    @DrawableRes
+
+    /*
+      @param int the posture index as sent by the board
+     * function returns the proper image based on the received posture index
+     */
+    public static Integer getImageAfterComparing(int posture) {
+        switch(posture) {
+            case 0:
+                return R.drawable.standing;
+            case 1:
+                return R.drawable.good_posture;
+            case 2:
+                return R.drawable.banding;
+            case 3:
+                return R.drawable.slouching;
+            case 4:
+                return R.drawable.leg;
+            case 5:
+                return R.drawable.leg;
+            case 6:
+            default:
+                break;
+        }
+        return null;
     }
 
     public static String getServerURL(){
@@ -143,101 +172,4 @@ else
         return granted;
     }
 
-    @Nullable
-    @DrawableRes
-
-    /*
-      @param ArrayList sensors values
-     * function take the 72 sensors check their values and return the proper image
-     */
-    public static Integer getImageAfterComparing(List<Integer> sensors) {
-        int posture = calculatePosture(sensors);
-        switch(posture) {
-            case 0:
-                return R.drawable.standing;
-            case 1:
-                return R.drawable.good_posture;
-            case 2:
-                return R.drawable.banding;
-            case 3:
-                return R.drawable.slouching;
-            case 4:
-                return R.drawable.leg;
-            case 5:
-                return R.drawable.leg;
-            case 6:
-            default:
-                break;
-        }
-        return null;
-    }
-
-    // 0=standing // 1=good // 2=banding forward // 3= slump // 4= unequal right //5= unequal left //6=Unknown
-    public static int calculatePosture(List<Integer> sensors){
-        int BackLU = 0;
-        int BottomLU = 0;
-        int BackRU = 0;
-        int BottomRU = 0;
-        int BackLD = 0;
-        int BottomLD = 0;
-        int BackRD = 0;
-        int BottomRD = 0;
-        if (sensors.size() != 72) {
-            Log.d(TAG, "getImageAfterComparing: not 72 but: " + sensors.size());
-            return 6;
-            //TODO connect to crashlytics
-        }
-
-        BackLU = sum(sensors, 0, 2) + sum(sensors, 6, 8) + sum(sensors, 12, 14);
-        BackRU = sum(sensors, 3, 5) + sum(sensors, 9, 11) + sum(sensors, 15, 17);
-        BackLD = sum(sensors, 18, 20) + sum(sensors, 24, 26) + sum(sensors, 30, 32);
-        BackRD = sum(sensors, 21, 23) + sum(sensors, 27, 29) + sum(sensors, 33, 35);
-        BottomLU = sum(sensors, 36, 38) + sum(sensors, 42, 44) + sum(sensors, 48, 50);
-        BottomRU = sum(sensors, 39, 41) + sum(sensors, 45, 47) + sum(sensors, 51, 53);
-        BottomLD = sum(sensors, 54, 56) + sum(sensors, 60, 62) + sum(sensors, 66, 68);
-        BottomRD = sum(sensors, 57, 59) + sum(sensors, 63, 65) + sum(sensors, 69, 71);
-        int BottomLeft = BottomLU + BottomLD;
-        int BottomRight = BottomRU + BottomRD;
-        int BottomDown = BottomRD + BottomLD;
-        int BottomUp = BottomRU + BottomLU;
-        int BackUp = BackLU + BackRU;
-        int BackDown = BackLD + BackRD;
-
-        Log.d(TAG, String.format(
-                "ButtomLeft: %d \nButtomRight: %d\nButtomDown: %d\nButtomUp: %d\nBackUp: %d\nBackDown: %d",
-                BottomLeft, BottomRight, BottomDown, BottomUp, BackUp, BackDown));
-        //standing
-        if (BottomDown + BottomUp < 6000) {
-            Log.d(TAG, "getImageAfterComparing: standing");
-            return 0;
-
-        }  else if (BackUp < 2100) {
-            Log.d(TAG, "getImageAfterComparing: banding");
-            return 2;
-
-        } else if (BackUp > 2100 && BottomUp + BackDown > 4200) {
-            Log.d(TAG, "getImageAfterComparing: good posture");
-            return 1;
-
-        }  else if (BottomRight - BottomLeft > 1200 || BottomLeft - BottomRight > 1200) {
-            Log.d(TAG, "getImageAfterComparing: leg");
-            return 4;
-
-        } else if (BottomDown > 3500 && BackUp > 2200 && (BottomUp + BackDown < 4200)) {
-            Log.d(TAG, "getImageAfterComparing: slouching");
-            return 3;
-
-        } else {
-            Log.d(TAG, "getImageAfterComparing: else good");
-            return 6;
-        }
-    }
-
-    public static int sum(List<Integer> sensorsToSum, int Start, int End) {
-        int SumPart = 0;
-        for (int i = Start; i <= End; i++) {
-            SumPart += sensorsToSum.get(i);
-        }
-        return SumPart;
-    }
 }

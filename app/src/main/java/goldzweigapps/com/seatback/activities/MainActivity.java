@@ -479,11 +479,19 @@ public class MainActivity extends AppCompatActivity{
         String sensorsData = "";
         //remove the start tag and the end tag from the full string
         data = data.replace("*", "");
-        data = data.replace(",#", "");
+        data = data.replace("#", "");
+        data = data.replace("\n", "");
+        data = data.replace("\r", "");
         String command  = "";
         String recordLength = "";
+        String postureIndex = "";
         //splitting the full string by , to get the values
+        sensorsData = data;
         for (String number : data.split(",")) {
+            if( postureIndex.length() == 0){
+                postureIndex = number;
+                continue;
+            }
 //            if( command.length() == 0){
 //                command = number;
 //                continue;
@@ -493,7 +501,7 @@ public class MainActivity extends AppCompatActivity{
 //                Log.d(TAG, "command a, recordLength="+recordLength);
 //                continue;
 //            }
-            sensorsData += number+",";
+//            sensorsData += number+",";
             //verifying that the number in not null or empty
             if (!(number == null || number.isEmpty())) {
                 //trying to convert the string into an int
@@ -505,13 +513,14 @@ public class MainActivity extends AppCompatActivity{
             }
         }
 
+        if( postureIndex.length() == 0) postureIndex = "0";
+
         // updating the server with the data record
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("sensorsData", sensorsData);
             jsonObject.put("seatback_id", Utils.getConnectecMAC());
-            int posture = Utils.calculatePosture(dataReady.subList(0,72));
-            jsonObject.put("posture", Utils.getPostureName(posture));
+            jsonObject.put("posture", Utils.getPostureName(Integer.parseInt(postureIndex)));
             jsonObject.put("user_id", Utils.getAdpaterAddress());
         } catch (JSONException e) {
             e.printStackTrace();
@@ -558,7 +567,10 @@ public class MainActivity extends AppCompatActivity{
         helper.add(jsonObjectRequest);
 
         UpdateTipsTask  myTask = new UpdateTipsTask ();
-        myTask.execute(dataReady.subList(0,72));
+        SensorsData dataToUpdate = new SensorsData();
+        dataToUpdate.posture = Integer.parseInt(postureIndex);
+        dataToUpdate.dataReady = dataReady;
+        myTask.execute(dataToUpdate);
 
       return dataReady;
     }
@@ -612,11 +624,11 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    class UpdateTipsTask extends AsyncTask<List<Integer>, Void, List<Integer>>
+    class UpdateTipsTask extends AsyncTask<SensorsData, Void, SensorsData>
     {
 
         @Override
-        protected void onPostExecute(List<Integer> data) {
+        protected void onPostExecute(SensorsData data) {
             List<Fragment> fragments = getSupportFragmentManager().getFragments();
             TipsFragment tipsFragment = null;
             HomeFragment homeFragment = null;
@@ -630,15 +642,15 @@ public class MainActivity extends AppCompatActivity{
                 if (tipsFragment.bottomPressureMap != null && tipsFragment.topPressureMap != null) {
 
                     tipsFragment.bottomPressureMap.setTop(false);
-                    tipsFragment.bottomPressureMap.setColors(data);
+                    tipsFragment.bottomPressureMap.setColors(data.dataReady);
 
                     tipsFragment.topPressureMap.setTop(true);
-                    tipsFragment.topPressureMap.setColors(data);
+                    tipsFragment.topPressureMap.setColors(data.dataReady);
                 }
 
             if( homeFragment != null)
             if (homeFragment.positionImageView != null && !MainActivity.this.isDestroyed()) {
-                Integer imageAfterComparing = Utils.getImageAfterComparing(data);
+                Integer imageAfterComparing = Utils.getImageAfterComparing(data.posture);
                 if (imageAfterComparing != null) {
                     Glide.with(MainActivity.this)
                             .load(imageAfterComparing)
@@ -648,7 +660,7 @@ public class MainActivity extends AppCompatActivity{
         }
 
         @Override
-        protected List<Integer> doInBackground(List<Integer>... params) {
+        protected SensorsData doInBackground(SensorsData... params) {
             return params[0];
         }
 
@@ -722,6 +734,11 @@ public class MainActivity extends AppCompatActivity{
                     })
                     .create();
         }
+    }
+
+    protected class SensorsData{
+        public int posture;
+        ArrayList<Integer> dataReady;
     }
 }
 
