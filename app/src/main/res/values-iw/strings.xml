@@ -20,4 +20,13 @@
     <string name="sensors_seat">מושב</string>
     <string name="sensors_back">משענת</string>
     <string name="sensors_unknown">לא ידוע</string>
+    <string name="workout_top_left">גב תחתון</string>
+    <string name="workout_top_middle">כתפיים 1</string>
+    <string name="workout_top_right">מרפקים</string>
+    <string name="workout_middle_left"> כתפיים 2</string>
+    <string name="workout_middle_middle">גב עליון</string>
+    <string name="workout_middle_right">צוואר</string>
+    <string name="workout_bottom_left">שכמות</string>
+    <string name="workout_bottom_middle">גב תחתון</string>
+    <string name="workout_bottom_right">כפות ידיים</string>
 </resources>

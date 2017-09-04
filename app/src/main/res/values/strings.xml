@@ -20,4 +20,13 @@
     <string name="sensors_seat">Seat</string>
     <string name="sensors_back">Back</string>
     <string name="sensors_unknown">Unknown</string>
+    <string name="workout_top_left">Lower Back</string>
+    <string name="workout_top_middle">Shoulders</string>
+    <string name="workout_top_right">Elbows</string>
+    <string name="workout_middle_left">Shoulders</string>
+    <string name="workout_middle_middle">Upper back</string>
+    <string name="workout_middle_right">Neck</string>
+    <string name="workout_bottom_left">Shoulder blades</string>
+    <string name="workout_bottom_middle">Lower Back</string>
+    <string name="workout_bottom_right">Palms</string>
 </resources>

@@ -10,4 +10,7 @@
         <attr name="textSize" format="dimension" />
         <attr name="shadowEnabled" format="boolean" />
     </declare-styleable>
+    <declare-styleable name="ImageViewWithPrecentage">
+        <attr name="precentage" format="string" />
+    </declare-styleable>
 </resources>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ImageViewWithPrecentage="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#f7fff7">
@@ -24,6 +25,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
+                ImageViewWithPrecentage:precentage="0.7"
                 android:id="@+id/img_exercise_top_left"  />
 
             <TextView
@@ -32,8 +34,8 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="bottom"
                 android:paddingTop="30dp"
-                android:text="Text"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/workout_top_left"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
@@ -53,8 +55,8 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="bottom"
                 android:paddingTop="30dp"
-                android:text="Text"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/workout_top_middle"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
 
         <FrameLayout
@@ -75,8 +77,8 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="bottom"
                 android:paddingTop="30dp"
-                android:text="Text"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/workout_top_right"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
     </LinearLayout>
     <LinearLayout
@@ -103,8 +105,8 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="bottom"
                 android:paddingTop="30dp"
-                android:text="Text"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/workout_middle_left"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
@@ -124,8 +126,8 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="bottom"
                 android:paddingTop="30dp"
-                android:text="Text"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/workout_middle_middle"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
@@ -145,8 +147,8 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="bottom"
                 android:paddingTop="30dp"
-                android:text="Text"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/workout_middle_right"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
         </LinearLayout>
     <LinearLayout
@@ -163,6 +165,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
+                ImageViewWithPrecentage:precentage="0.7"
                 android:id="@+id/img_exercise_bottom_left"/>
 
             <TextView
@@ -171,19 +174,20 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="bottom"
                 android:paddingTop="30dp"
-                android:text="Text"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/workout_bottom_left"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
 
-            <ImageView
+            <goldzweigapps.com.seatback.utils.ImageViewWithPrecentage
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
+                ImageViewWithPrecentage:precentage="0.7"
                 android:id="@+id/img_exercise_bottom_middle"/>
 
             <TextView
@@ -192,8 +196,8 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="bottom"
                 android:paddingTop="30dp"
-                android:text="Text"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/workout_bottom_middle"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
@@ -213,8 +217,8 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="bottom"
                 android:paddingTop="30dp"
-                android:text="Text"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/workout_bottom_right"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
     </LinearLayout>
     </LinearLayout>
