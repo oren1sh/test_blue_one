@@ -12,19 +12,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.IBinder;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.PermissionChecker;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -36,8 +32,6 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.Request;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.bumptech.glide.Glide;
 import com.devpaul.bluetoothutillib.SimpleBluetooth;
 import com.devpaul.bluetoothutillib.dialogs.DeviceDialog;
@@ -51,7 +45,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.Response;
 import com.android.volley.toolbox.JsonObjectRequest;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -521,7 +514,7 @@ public class MainActivity extends AppCompatActivity{
             jsonObject.put("sensorsData", sensorsData);
             jsonObject.put("seatback_id", Utils.getConnectecMAC());
             jsonObject.put("posture", Utils.getPostureName(Integer.parseInt(postureIndex)));
-            jsonObject.put("user_id", Utils.getAdpaterAddress());
+            jsonObject.put("user_id", Utils.getUserID(this.getBaseContext()));
         } catch (JSONException e) {
             e.printStackTrace();
         }

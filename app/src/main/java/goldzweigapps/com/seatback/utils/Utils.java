@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.provider.Settings;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -77,12 +78,11 @@ else
         connectedMAC = MAC;
     }
 
-    public static String getAdpaterAddress() {
-        String address = BluetoothAdapter.getDefaultAdapter().getAddress();
-        if( address.length() == 0)
-            address = android.os.Build.SERIAL;
+    public static String getUserID(Context context) {
+        String device_unique_id = Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
 
-        return address;
+        return device_unique_id;
     }
     /**
      *
