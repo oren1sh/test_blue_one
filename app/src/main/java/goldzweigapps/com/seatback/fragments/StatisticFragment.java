@@ -2,58 +2,43 @@ package goldzweigapps.com.seatback.fragments;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.bumptech.glide.Glide;
 import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.components.LegendEntry;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.IValueFormatter;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
-import com.github.mikephil.charting.utils.ColorTemplate;
-import com.github.mikephil.charting.utils.MPPointF;
-import com.github.mikephil.charting.utils.ViewPortHandler;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Timestamp;
-import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -63,6 +48,7 @@ import java.util.TimeZone;
 import goldzweigapps.com.seatback.R;
 import goldzweigapps.com.seatback.activities.MainActivity;
 import goldzweigapps.com.seatback.application.SeatBackApplication;
+import goldzweigapps.com.seatback.utils.DayAxisValueFormatter;
 import goldzweigapps.com.seatback.utils.Utils;
 
 
@@ -163,6 +149,15 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
 
         chart1.setOnChartGestureListener(this);
 
+        IAxisValueFormatter xAxisFormatter = new DayAxisValueFormatter(chart1);
+
+        XAxis xAxis = chart1.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setGranularity(1f); // only intervals of 1 day
+        xAxis.setLabelCount(7);
+        xAxis.setValueFormatter(xAxisFormatter);
+
 //        MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view);
 //        mv.setChartView(mChart); // For bounds control
 //        chart1.setMarker(mv);
@@ -176,12 +171,6 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
         leftAxis.setAxisMinimum(0f); // this replaces setStartAtZero(true)
 
         chart1.getAxisRight().setEnabled(false);
-
-        XAxis xAxis = chart1.getXAxis();
-//        xAxis.setEnabled(true);
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setDrawGridLines(false);
-
         chart1.getAxisLeft().setDrawGridLines(false);
 
 //        chart1.setData(generateBarData(1, 20000, 12));
@@ -303,7 +292,7 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("seatback_id", Utils.getConnectecMAC());
-            jsonObject.put("user_id", Utils.getAdpaterAddress());
+            jsonObject.put("user_id", Utils.getUserID(this.context));
             jsonObject.put("from_time", from_date);
             jsonObject.put("to_time", to_date);
         } catch (JSONException e) {
@@ -441,6 +430,9 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
 
         chart.setVisibility(View.INVISIBLE);
         chart1.setVisibility(View.VISIBLE);
+        ArrayList<BarEntry> entries = new ArrayList<BarEntry>();
+
+        ArrayList<String> axisValues = new ArrayList<String>();
 
         for(int i= 0; i< response.length(); i++){
             try {
@@ -456,6 +448,14 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                     year = obj.getInt("year");
                     month = obj.getInt("month");
                     day = obj.getInt("day");
+                    SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd");
+                    String strDate = String.format("%d-%d-%d", year, month, day);
+
+                    try {
+                        axisValues.add(new SimpleDateFormat("dd/MM").format(ft.parse(strDate)));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
                 }
                 catch (JSONException e){
                     continue;
@@ -470,9 +470,11 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                         switch( postureIndx.getString("posture")){
                             case "good":
                                 values[0] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.GREEN);
+                                entries.add(new BarEntry(i, percentage));
                                 break;
                             case "standing":
                                 values[1] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.RED);
+                                entries.add(new BarEntry(i, percentage));
                                 break;
                             case "bending":
                                 values[2] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.YELLOW);
@@ -497,7 +499,7 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
 
             int valuesLength = 0;
             for(BarDataPoint val:values){
-               if( val.value > 0f)
+               if( val.value > 0f && val.color == Color.GREEN)
                    valuesLength++;
             }
             float[] valuesArray = new float[valuesLength];
@@ -505,26 +507,30 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
             int[] colors1 = new int[valuesLength];
             int indx = 0;
             for(BarDataPoint val:values){
-                if( val.value > 0f){
+                if( val.value > 0f && val.color == Color.GREEN){
                     values1[indx] = val;
                     valuesArray[indx] = val.value;
                     colors1[indx++] = val.color;
                 }
             }
 
-            ArrayList<BarEntry> entries = new ArrayList<BarEntry>();
-            entries.add(new BarEntry(i, valuesArray, values1));
-            MyBarDataSet ds = new MyBarDataSet(entries, "");
-            ds.setColors(colors1);
-            ds.setStackLabels(labels);
-            sets.add(ds);
 //            entries.clear();
         }
 
 
+        BarDataSet ds = new BarDataSet(entries, "");
+        ds.setColor(Color.GREEN);
+        ds.setStackLabels(labels);
+        sets.add(ds);
+
+        XAxis xAxis = chart1.getXAxis();
+        DayAxisValueFormatter xAxisFormatter = (DayAxisValueFormatter)xAxis.getValueFormatter();
+        xAxisFormatter.setAxisValues(axisValues);
+
         BarData d = new BarData(sets);
 //        BarData d = generateBarData(1, 100, 5);
         chart1.setData(d);
+
 //        chart1.getLegend().setExtra(new LegendEntry[]{new LegendEntry("Standing", Legend.LegendForm.DEFAULT, Float.NaN, Float.NaN, null, Color.GREEN)});
 
         chart1.invalidate();
