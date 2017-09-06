@@ -3,9 +3,6 @@ package goldzweigapps.com.seatback.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -13,13 +10,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.bumptech.glide.Glide;
 
-import java.io.Serializable;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import goldzweigapps.com.seatback.R;
-import goldzweigapps.com.seatback.activities.MainActivity;
 import goldzweigapps.com.seatback.activities.WorkoutActivity;
+import goldzweigapps.com.seatback.application.SeatBackApplication;
+import goldzweigapps.com.seatback.utils.Utils;
 
 
 public class WorkoutFragment extends Fragment implements View.OnClickListener{
@@ -28,6 +33,19 @@ public class WorkoutFragment extends Fragment implements View.OnClickListener{
     private ImageView mExerciseTopRight, mExerciseMiddleMiddle, mExerciseMiddleLeft,
                 mExerciseMiddleRightMost, mExerciseTopMiddle, mExerciseTopLeft,
             mExerciseBottomLeft, mExerciseBottomMiddle, mExerciseBottomRight;
+    private SeatBackApplication helper = SeatBackApplication.getInstance();
+    private static String[] videoFiles = new String[] {
+            "YEZlElFTp4k",
+            "vUktU_pxUGY",
+            "RPiGQ6MFqAM",
+            "gjNB-rvc9PQ",
+            "D3GdDccp6Gs",
+            "cnBsBbqk0so",
+            "AsQ8e45eb_c",
+            "Ao7HEEmAe_I",
+            "0hL5CD5H_kc"
+    };
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -61,46 +79,75 @@ public class WorkoutFragment extends Fragment implements View.OnClickListener{
         mExerciseBottomRight = (ImageView) view.findViewById(R.id.img_exercise_bottom_right);
         mExerciseBottomRight.setOnClickListener(this);
 
-        Glide.with(context).load(R.drawable.lowback).into(mExerciseTopMiddle);
-        Glide.with(context).load(R.drawable.restup).into(mExerciseTopRight);
-        Glide.with(context).load(R.drawable.restdown).into(mExerciseTopLeft);
+        Glide.with(context).load(R.drawable.restdown).into(mExerciseTopRight);
+        Glide.with(context).load(R.drawable.restup).into(mExerciseTopMiddle);
+        Glide.with(context).load(R.drawable.lowback).into(mExerciseTopLeft);
 
-        Glide.with(context).load(R.drawable.shoulderup).into(mExerciseMiddleMiddle);
-        Glide.with(context).load(R.drawable.handsup).into(mExerciseMiddleRightMost);
-        Glide.with(context).load(R.drawable.twistneck).into(mExerciseMiddleLeft);
+        Glide.with(context).load(R.drawable.twistneck).into(mExerciseMiddleRightMost);
+        Glide.with(context).load(R.drawable.handsup).into(mExerciseMiddleMiddle);
+        Glide.with(context).load(R.drawable.shoulderup).into(mExerciseMiddleLeft);
 
-        Glide.with(context).load(R.drawable.twisthand).into(mExerciseBottomLeft);
-        Glide.with(context).load(R.drawable.twistbody).into(mExerciseBottomMiddle);
         Glide.with(context).load(R.drawable.carpal).into(mExerciseBottomRight);
+        Glide.with(context).load(R.drawable.twistbody).into(mExerciseBottomMiddle);
+        Glide.with(context).load(R.drawable.twisthand).into(mExerciseBottomLeft);
 
+        sendRequest();
     }
 
     @Override
     public void onClick(View v) {
         //Could have done 4 on click listeners but this is cleaner
         if (v.equals(mExerciseTopLeft)) {
-           showExercise(R.drawable.extra);
+           showExercise(videoFiles[0]);
         } else if (v.equals(mExerciseTopMiddle)) {
-            showExercise(R.drawable.extra2);
+            showExercise(videoFiles[1]);
        } else if (v.equals(mExerciseTopRight)) {
-           showExercise(R.drawable.extra2);
+           showExercise(videoFiles[2]);
         } else if (v.equals(mExerciseMiddleLeft)) {
-            showExercise(R.drawable.extra2);
+            showExercise(videoFiles[3]);
         } else if (v.equals(mExerciseMiddleMiddle)) {
-            showExercise(R.drawable.extra2);
+            showExercise(videoFiles[4]);
         } else if (v.equals(mExerciseTopRight)) {
-            showExercise(R.drawable.extra2);
+            showExercise(videoFiles[5]);
        } else if (v.equals(mExerciseBottomLeft)) {
-           showExercise(R.drawable.extra3);
+           showExercise(videoFiles[6]);
         } else if (v.equals(mExerciseBottomMiddle)) {
-            showExercise(R.drawable.extra3);
+            showExercise(videoFiles[7]);
        } else if (v.equals(mExerciseBottomRight)) {
-           showExercise(R.drawable.extra4);
+           showExercise(videoFiles[8]);
        }
     }
-    private void showExercise(@DrawableRes Integer drawableResID) {
+    private void showExercise(String videoID) {
         Intent moveToExerciseIntent = new Intent(context, WorkoutActivity.class);
-        moveToExerciseIntent.putExtra(WorkoutActivity.DRAWABLE_INTENT_KEY, drawableResID);
+        moveToExerciseIntent.putExtra(WorkoutActivity.DRAWABLE_INTENT_KEY, videoID);
         startActivity(moveToExerciseIntent);
+    }
+    private void sendRequest(){
+        JSONObject jsonObject = new JSONObject();
+
+        // Request a string response from the provided URL.
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Utils.getServerURL() + "/getMovies",
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        for(int index = 0; index <response.length(); index++){
+                            try {
+                                JSONObject obj = response.getJSONObject(index);
+                                videoFiles[index] = obj.getString("name");
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+
+        int socketTimeout = 30000;//30 seconds - change to what you want
+        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+        jsonArrayRequest.setRetryPolicy(policy);
+        helper.add(jsonArrayRequest);
     }
 }
