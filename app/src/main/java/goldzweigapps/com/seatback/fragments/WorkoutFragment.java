@@ -107,7 +107,7 @@ public class WorkoutFragment extends Fragment implements View.OnClickListener{
             showExercise(videoFiles[3]);
         } else if (v.equals(mExerciseMiddleMiddle)) {
             showExercise(videoFiles[4]);
-        } else if (v.equals(mExerciseTopRight)) {
+        } else if (v.equals(mExerciseMiddleRightMost)) {
             showExercise(videoFiles[5]);
        } else if (v.equals(mExerciseBottomLeft)) {
            showExercise(videoFiles[6]);
