@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:padding="@dimen/_16sdp"
     android:background="#f7fff7">
-    <goldzweigapps.com.seatback.views.CircleTimerView
+    <seatback.com.seatback.views.CircleTimerView
         android:layout_width="@dimen/_140sdp"
         android:layout_height="@dimen/_140sdp"
         android:layout_centerHorizontal="true"

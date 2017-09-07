@@ -6,28 +6,28 @@
     android:background="#f7fff7"
     android:id="@+id/tips_fragment">
 
-    <goldzweigapps.com.seatback.views.PressureMap
+    <seatback.com.seatback.views.PressureMap
         android:id="@+id/pressure_map_top"
         android:layout_width="@dimen/_170sdp"
         android:layout_height="@dimen/_170sdp"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="@dimen/_20sdp"
         android:layout_marginTop="@dimen/_20sdp"/>
-    <goldzweigapps.com.seatback.views.VerticalTextView
+    <seatback.com.seatback.views.VerticalTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toLeftOf="@id/pressure_map_top"
         android:layout_marginTop="@dimen/_70sdp"
         android:text="@string/sensors_back"
         android:textSize="40sp"/>
-    <goldzweigapps.com.seatback.views.PressureMap
+    <seatback.com.seatback.views.PressureMap
         android:id="@+id/pressure_map_bottom"
         android:layout_width="@dimen/_170sdp"
         android:layout_height="@dimen/_170sdp"
         android:layout_below="@+id/pressure_map_top"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="@dimen/_30sdp"/>
-    <goldzweigapps.com.seatback.views.VerticalTextView
+    <seatback.com.seatback.views.VerticalTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/pressure_map_top"

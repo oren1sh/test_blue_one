@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="goldzweigapps.com.seatback.activities.SplashScreeen"
+    tools:context="goldzweigapps.com.seatback.seatback.com.seatback.activities.SplashScreeen"
     android:id="@+id/splash_root_view"
     android:background="#a0d186">
     <ImageView

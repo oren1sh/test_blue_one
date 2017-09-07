@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="goldzweigapps.com.seatback">
+    package="seatback.com.seatback">
 
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".application.SeatBackApplication"
+        android:name="seatback.com.seatback.application.SeatBackApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".activities.MainActivity"
+            android:name="seatback.com.seatback.activities.MainActivity"
             android:screenOrientation="portrait">
         </activity>
 
-        <service android:name=".services.TimeService" />
+        <service android:name="seatback.com.seatback.services.TimeService" />
 
-        <activity android:name=".activities.InformationActivity" />
-        <activity android:name=".activities.WorkoutActivity" />
+        <activity android:name="seatback.com.seatback.activities.InformationActivity" />
+        <activity android:name="seatback.com.seatback.activities.WorkoutActivity" />
         <!-- crashlytics api key -->
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="24604424f5eadd39e0f586963e025492bc58988f" />
 
-        <activity android:name=".activities.SplashScreeen"  android:noHistory="true">
+        <activity android:name="seatback.com.seatback.activities.SplashScreeen"  android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

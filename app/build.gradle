@@ -23,7 +23,7 @@ android {
     versionProps.store(versionPropsFile.newWriter(), null)
 
     defaultConfig {
-        applicationId "goldzweigapps.com.seatback"
+        applicationId "seatback.com.seatback"
         minSdkVersion 21
         targetSdkVersion 25
         versionCode code
@@ -69,4 +69,5 @@ dependencies {
     compile 'com.github.PhilJay:MPAndroidChart:v3.0.2'
     testCompile 'junit:junit:4.12'
     compile files('libs/YouTubeAndroidPlayerApi.jar')
+    compile 'com.google.android.gms:play-services-auth:8.4.0'
 }
