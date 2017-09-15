@@ -9,7 +9,6 @@ import android.widget.ImageView;
 
 import com.google.android.youtube.player.YouTubeStandalonePlayer;
 
-
 import seatback.com.seatback.R;
 import seatback.com.seatback.utils.ColorUtils;
 
