@@ -32,10 +32,36 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            zipAlignEnabled true
+        }
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '.debug'
+        }
+        android.applicationVariants.all { variant ->
+            def appName
+            //Check if an applicationName property is supplied; if not use the name of the parent project.
+            if (project.hasProperty("applicationName")) {
+                appName = applicationName
+            } else {
+                appName = parent.name
+            }
+
+            variant.outputs.each { output ->
+                def newApkName
+                //If there's no ZipAlign task it means that our artifact will be unaligned and we need to mark it as such.
+                if (output.zipAlign) {
+                    newApkName = "${appName}-${output.baseName}-${variant.versionName}.apk"
+                } else {
+                    newApkName = "${appName}-${output.baseName}-${variant.versionName}-unaligned.apk"
+                }
+                output.outputFile = new File(output.outputFile.parent, newApkName)
+            }
         }
     }
 }
@@ -51,8 +77,9 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     //support libraries
+    compile 'com.android.support:design:25.3.1'
     compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-beta5'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     //my own library for material design tabs: https://github.com/gilgoldzweig/EasyTabs
     compile 'com.github.gilgoldzweig:EasyTab:1.1.2'
     //glide image loading: https://github.com/bumptech/glide
