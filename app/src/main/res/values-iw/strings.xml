@@ -29,4 +29,5 @@
     <string name="workout_bottom_left">שכמות</string>
     <string name="workout_bottom_middle">גב תחתון</string>
     <string name="workout_bottom_right">כפות ידיים</string>
+    <string name="version_number">גרסה:</string>
 </resources>

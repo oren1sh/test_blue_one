@@ -20,41 +20,27 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:visibility="visible"
-        android:id="@+id/about_id">
-        <LinearLayout
+        android:id="@+id/about_id"
+        android:weightSum="5"
+        android:layout_gravity="center">
+        <ImageView
+            android:id="@+id/img_logo"
+            android:layout_width="@dimen/_250sdp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_50sdp"
+            android:layout_weight="1"
+            android:layout_gravity="center"/>
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="2">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Version:"
-                android:layout_weight="1"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1.0.1"
-                android:id="@+id/version"
-                android:layout_weight="1"/>
-        </LinearLayout>
-        <LinearLayout
+            android:text="@string/version_number"
+            android:layout_weight="1"/>
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_weight="2">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Version:"
-                android:layout_weight="1"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1.0.1"
-                android:id="@+id/version1"
-                android:layout_weight="1"/>
-        </LinearLayout>
+            android:text=""
+            android:id="@+id/version"
+            android:layout_weight="1"/>
     </LinearLayout>
     <ImageView
         android:id="@+id/exceriseVideoView"

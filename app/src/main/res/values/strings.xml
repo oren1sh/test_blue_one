@@ -29,4 +29,5 @@
     <string name="workout_bottom_left">Shoulder blades</string>
     <string name="workout_bottom_middle">Lower Back</string>
     <string name="workout_bottom_right">Palms</string>
+    <string name="version_number">Version:</string>
 </resources>
