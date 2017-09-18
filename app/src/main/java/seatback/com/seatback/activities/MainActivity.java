@@ -15,6 +15,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -25,7 +26,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -33,22 +33,25 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
 import com.devpaul.bluetoothutillib.SimpleBluetooth;
 import com.devpaul.bluetoothutillib.dialogs.DeviceDialog;
-import com.devpaul.bluetoothutillib.utils.SimpleBluetoothListener;
 import com.devpaul.bluetoothutillib.utils.BluetoothUtility;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.android.volley.VolleyError;
-import com.android.volley.Response;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.devpaul.bluetoothutillib.utils.SimpleBluetoothListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Handler;
+
+import goldzweigapps.tabs.Builder.EasyTabsBuilder;
+import goldzweigapps.tabs.Items.TabItem;
+import goldzweigapps.tabs.View.EasyTabs;
 import seatback.com.seatback.R;
 import seatback.com.seatback.application.SeatBackApplication;
 import seatback.com.seatback.fragments.HomeFragment;
@@ -58,9 +61,6 @@ import seatback.com.seatback.fragments.WorkoutFragment;
 import seatback.com.seatback.services.TimeService;
 import seatback.com.seatback.utils.ColorUtils;
 import seatback.com.seatback.utils.Utils;
-import goldzweigapps.tabs.Builder.EasyTabsBuilder;
-import goldzweigapps.tabs.Items.TabItem;
-import goldzweigapps.tabs.View.EasyTabs;
 
 public class MainActivity extends AppCompatActivity{
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity{
     private boolean packetStarted = false;
     private CharSequence startChar = "*";
     private CharSequence endChar = "#";
-    ArrayList<Integer> integerDataFull = new ArrayList<>();
+//    ArrayList<Integer> integerDataFull = new ArrayList<>();
     String dataFull = "";
     private Menu menu = null;
     SeatBackApplication helper = SeatBackApplication.getInstance();
@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity{
         ViewCompat.setLayoutDirection(getWindow().getDecorView(), ViewCompat.LAYOUT_DIRECTION_LTR);
 
         //adding first data
-        addFirstEmptyDataToFullSensorsArray();
+//        addFirstEmptyDataToFullSensorsArray();
 
         //region permission
         //asks for the user bluetooth permission goes in runtime
@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity{
             @Override
             public void onBluetoothDataReceived(byte[] bytes, String data) {
                 super.onBluetoothDataReceived(bytes, data);
-                Log.d(TAG, "onBluetoothDataReceived: " + data);
+//                Log.d(TAG, "onBluetoothDataReceived: " + data);
                 if( !packetStarted){
                     if (!data.contains(startChar)) return;
                     // need to escape regular expression special characters, such as *.
@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity{
                     }
                 } else {
                     //changing the data from the string in order to update the ui
-//                    changeDataFromString(dataFull);
+//                    parseDataFromString(dataFull);
                     data = data.replaceAll("[\\\r|\\\n]", "");
                     String[] parts = data.split(endChar.toString());
                     if( parts.length > 0) {
@@ -216,7 +216,9 @@ public class MainActivity extends AppCompatActivity{
                     }
                     else
                         dataFull += data;
-                    integerDataFull = changeDataFromString(dataFull);
+//                    integerDataFull =
+                    Log.d(TAG, "data size: " + dataFull);
+                    parseDataFromString(dataFull);
                     if( parts.length == 2) {
                         dataFull = parts[1];
                     }
@@ -224,7 +226,7 @@ public class MainActivity extends AppCompatActivity{
                         dataFull = "";
                 }
 
-                Log.d(TAG, "data size: " + dataFull);
+//                Log.d(TAG, "data size: " + dataFull);
 
 //                    integerDataFull.clear();
             }
@@ -239,6 +241,7 @@ public class MainActivity extends AppCompatActivity{
                         .show();
                 isDeviceConnected = true;
                 packetStarted = false;
+
                 UpdateBluetoothMenuTask myTask = new UpdateBluetoothMenuTask();
                 myTask.execute();
 
@@ -405,6 +408,7 @@ public class MainActivity extends AppCompatActivity{
                 break;
             case seatback.com.seatback.R.id.menu_bluetooth:
                 if (isDeviceConnected) {
+//                    simpleBluetooth.sendData(Long.toString(System.currentTimeMillis() / 1000));
                     item.setIcon(R.drawable.ic_bluetooth_connected_white_24dp);
                 } else {
                     simpleBluetooth.scan(BLUETOOTH_SCAN_REQUEST);
@@ -478,40 +482,82 @@ public class MainActivity extends AppCompatActivity{
     }
 
 
-    private ArrayList<Integer> changeDataFromString(String data) {
-        ArrayList<Integer> dataReady = new ArrayList<>();
-        if (data == null) {
-            return null;
-        }
-        String sensorsData = "";
+    private void parseDataFromString(String data) {
         //remove the start tag and the end tag from the full string
         data = data.replace("*", "");
         data = data.replace("#", "");
         data = data.replace("\n", "");
         data = data.replace("\r", "");
         String command  = "";
+        //splitting the full string by , to get the values
+        if( data.substring(0, 1).contains("R")) {
+            simpleBluetooth.sendData(Long.toString(System.currentTimeMillis() / 1000));
+            if( data.length() > 3)
+                processSensorsData(data.substring(2, data.length()));
+        }
+        if( data.substring(0, 1).contains("S")) {
+            simpleBluetooth.sendData(Long.toString(System.currentTimeMillis() / 1000));
+            if( data.length() > 3)
+                processSD_Data(data.substring(2, data.length()));
+        }
+    }
+
+    // process the SD data which is an "array" where each element index corrsponds
+    // to the posture index and the value within that array's cell has the number of samples
+    // that were measured using that posture.
+    // The posture array is followed by a time stamp
+    // The array data might be prefixed with the string "OnOff" which indicates that the sent
+    // samples were measured during a time where the device did not have a real-time clock value.
+    private void processSD_Data( String data) {
+        boolean isOnOff = false;
+
+        if( data.substring(0, 6).equals("OnOff,")){
+            Log.d(TAG, "Found OnOff");
+            data = data.substring(6);
+            isOnOff = true;
+        }
+
+        String[] values = data.split(",");
+        int startOfRow = 0;
+        if( values.length > 0){
+            int numberOfPossiblePostures = Integer.parseInt(values[startOfRow++]);
+            String serverData = (isOnOff ? "OnOff,":"") + Long.toString(System.currentTimeMillis() / 1000) +",";
+
+            do {
+                for(int index = 0; index < numberOfPossiblePostures; index++){
+//                Log.d(TAG, "Found for posture " + index  + " the count " + values[startOfRow + index]);
+                    serverData += values[startOfRow + index] + ",";
+                }
+//            Log.d(TAG, "Found the following timestamp " + values[startOfRow + numberOfPossiblePostures + 1]);
+                serverData += values[startOfRow + numberOfPossiblePostures + 1];
+                updateServerWithData(serverData, "0", 0);
+                startOfRow += numberOfPossiblePostures + 2;
+                serverData = "";
+            }
+            while( startOfRow < (values.length - 1));
+        }
+    }
+
+    // data - the sensors string data without the star/end characters and without
+    // the command "R" character
+    private void processSensorsData( String data) {
+        ArrayList<Integer> dataReady = new ArrayList<>();
         String recordLength = "";
         String postureIndex = "";
-        //splitting the full string by , to get the values
-        sensorsData = data;
+
         for (String number : data.split(",")) {
+//            if( recordLength.length() == 0 ){
+//                recordLength = number;
+//                Log.d(TAG, "command R, recordLength="+recordLength);
+//                continue;
+//            }
             if( postureIndex.length() == 0){
                 postureIndex = number;
                 continue;
             }
-//            if( command.length() == 0){
-//                command = number;
-//                continue;
-//            }
-//            if( command.equals("a") && recordLength.length() == 0 ){
-//                recordLength = number;
-//                Log.d(TAG, "command a, recordLength="+recordLength);
-//                continue;
-//            }
-//            sensorsData += number+",";
             //verifying that the number in not null or empty
             if (!(number == null || number.isEmpty())) {
-                //trying to convert the string into an int
+//                trying to convert the string into an int
                 try {
                     dataReady.add(Integer.parseInt(number.trim()));
                 } catch (NumberFormatException e) {
@@ -522,12 +568,31 @@ public class MainActivity extends AppCompatActivity{
 
         if( postureIndex.length() == 0) postureIndex = "0";
 
+        updateServerWithData(data, postureIndex, 1);
+
+        UpdateTipsTask  myTask = new UpdateTipsTask ();
+        SensorsData dataToUpdate = new SensorsData();
+        dataToUpdate.posture = Integer.parseInt(postureIndex);
+        dataToUpdate.dataReady = dataReady;
+        myTask.execute(dataToUpdate);
+    }
+
+    void updateServerWithData(String data, String postureIndex, int typeOfData){
+        String endpointURL = Utils.getServerURL();
         // updating the server with the data record
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("sensorsData", sensorsData);
+            if( typeOfData == 0){
+                jsonObject.put("sensorsSDData", data);
+                endpointURL += "/updateSDData";
+            }
+            if( typeOfData == 1){
+                jsonObject.put("sensorsData", data);
+                jsonObject.put("posture", Utils.getPostureName(Integer.parseInt(postureIndex)));
+                endpointURL += "/updateSensorsData";
+            }
+
             jsonObject.put("seatback_id", Utils.getConnectecMAC());
-            jsonObject.put("posture", Utils.getPostureName(Integer.parseInt(postureIndex)));
             jsonObject.put("user_id", Utils.getUserID(this.getBaseContext()));
         } catch (JSONException e) {
             e.printStackTrace();
@@ -536,7 +601,7 @@ public class MainActivity extends AppCompatActivity{
         // Instantiate the RequestQueue.
 
         // Request a string response from the provided URL.
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Utils.getServerURL() + "/updateData", jsonObject,
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(endpointURL, jsonObject,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -572,21 +637,13 @@ public class MainActivity extends AppCompatActivity{
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         helper.add(jsonObjectRequest);
-
-        UpdateTipsTask  myTask = new UpdateTipsTask ();
-        SensorsData dataToUpdate = new SensorsData();
-        dataToUpdate.posture = Integer.parseInt(postureIndex);
-        dataToUpdate.dataReady = dataReady;
-        myTask.execute(dataToUpdate);
-
-      return dataReady;
     }
 
-    private void addFirstEmptyDataToFullSensorsArray() {
-        for (int i = 0; i < 72; i++) {
-            integerDataFull.add(0);
-        }
-    }
+//    private void addFirstEmptyDataToFullSensorsArray() {
+//        for (int i = 0; i < 72; i++) {
+//            integerDataFull.add(0);
+//        }
+//    }
 
     class UpdateBluetoothMenuTask extends AsyncTask<Void, Void, Void>
     {
@@ -601,9 +658,32 @@ public class MainActivity extends AppCompatActivity{
             if( menu != null) {
                 if (isDeviceConnected == true) {
                     menu.getItem(0).setIcon(R.drawable.ic_bluetooth_connected_white_24dp);
+                    new CountDownTimer(2000, 2000) {
+                        public void onFinish() {
+                            // When timer is finished
+                            // Execute your code here
+                            simpleBluetooth.sendData(Long.toString(System.currentTimeMillis() / 1000));
+                        }
+
+                        public void onTick(long millisUntilFinished) {
+                            // millisUntilFinished    The amount of time until finished.
+                        }
+                    }.start();
+
                     if( myCountdownTimer != null)
                         myCountdownTimer.cancel();
                     myCountdownTimer = null;
+                    SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+                    String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
+                    try {
+//                        if (deviceMAC.length() > 0) {
+//                            simpleBluetooth.sendData("1");
+//                        }
+                    }
+                    catch (IllegalStateException ex){
+                        Log.d(TAG, "onStart IllegalStateException" + ex.getMessage());
+                    }
+
                 }
                 else {
                     menu.getItem(0).setIcon(R.drawable.ic_bluetooth_white_24dp);
