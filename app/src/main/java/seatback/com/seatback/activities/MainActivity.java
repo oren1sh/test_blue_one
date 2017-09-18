@@ -339,7 +339,7 @@ public class MainActivity extends AppCompatActivity{
         public void onReceive(Context context, Intent intent) {
             if (intent.getExtras() != null) {
                 long millisUntilFinished = intent.getLongExtra("countdown", 0);
-                Log.d(TAG, "onReceive: " + millisUntilFinished);
+//                Log.d(TAG, "onReceive: " + millisUntilFinished);
                 List<Fragment> fragments = getSupportFragmentManager().getFragments();
                 HomeFragment homeFragment = null;
                 for(Fragment f: fragments){
@@ -518,10 +518,14 @@ public class MainActivity extends AppCompatActivity{
         }
 
         String[] values = data.split(",");
+
         int startOfRow = 0;
         if( values.length > 0){
+            Log.d(TAG, "data = " + data);
+            Log.d(TAG, "values.length = " + values.length);
+
             int numberOfPossiblePostures = Integer.parseInt(values[startOfRow++]);
-            String serverData = (isOnOff ? "OnOff,":"") + Long.toString(System.currentTimeMillis() / 1000) +",";
+            String serverData = (isOnOff ? "OnOff,":"");
 
             do {
                 for(int index = 0; index < numberOfPossiblePostures; index++){
@@ -529,7 +533,14 @@ public class MainActivity extends AppCompatActivity{
                     serverData += values[startOfRow + index] + ",";
                 }
 //            Log.d(TAG, "Found the following timestamp " + values[startOfRow + numberOfPossiblePostures + 1]);
-                serverData += values[startOfRow + numberOfPossiblePostures + 1];
+                String deviceTimestampValue = values[startOfRow + numberOfPossiblePostures + 1];
+                if( isOnOff){
+                    long deviceTimestamp = Long.parseLong(values[startOfRow + numberOfPossiblePostures + 1]);
+                    deviceTimestamp = System.currentTimeMillis() - deviceTimestamp;
+                    deviceTimestampValue = String.valueOf(deviceTimestamp / 1000);
+                }
+                serverData = deviceTimestampValue + "," + serverData;
+
                 updateServerWithData(serverData, "0", 0);
                 startOfRow += numberOfPossiblePostures + 2;
                 serverData = "";
@@ -542,15 +553,9 @@ public class MainActivity extends AppCompatActivity{
     // the command "R" character
     private void processSensorsData( String data) {
         ArrayList<Integer> dataReady = new ArrayList<>();
-        String recordLength = "";
         String postureIndex = "";
 
         for (String number : data.split(",")) {
-//            if( recordLength.length() == 0 ){
-//                recordLength = number;
-//                Log.d(TAG, "command R, recordLength="+recordLength);
-//                continue;
-//            }
             if( postureIndex.length() == 0){
                 postureIndex = number;
                 continue;
@@ -568,7 +573,8 @@ public class MainActivity extends AppCompatActivity{
 
         if( postureIndex.length() == 0) postureIndex = "0";
 
-        updateServerWithData(data, postureIndex, 1);
+        String currentTimeStamp = Long.toString(System.currentTimeMillis() / 1000);
+        updateServerWithData(currentTimeStamp + "," + data, postureIndex, 1);
 
         UpdateTipsTask  myTask = new UpdateTipsTask ();
         SensorsData dataToUpdate = new SensorsData();
@@ -638,12 +644,6 @@ public class MainActivity extends AppCompatActivity{
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         helper.add(jsonObjectRequest);
     }
-
-//    private void addFirstEmptyDataToFullSensorsArray() {
-//        for (int i = 0; i < 72; i++) {
-//            integerDataFull.add(0);
-//        }
-//    }
 
     class UpdateBluetoothMenuTask extends AsyncTask<Void, Void, Void>
     {

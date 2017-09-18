@@ -458,7 +458,7 @@ public class CircleTimerView extends View {
                 mCircleTimerListener.onTimerSetValueChanged(time);
             }
             this.mCurrentRadian = (float) (time / 300000.0f * 2 * Math.PI / 720);
-        Log.d(TAG, "setCurrentTime: " + mCurrentRadian);
+//        Log.d(TAG, "setCurrentTime: " + mCurrentRadian);
             period = new Period(time).toPeriod();
             invalidate();
         }
