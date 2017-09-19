@@ -15,9 +15,24 @@
         <activity
             android:name="seatback.com.seatback.activities.MainActivity"
             android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name=".MainActivity" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <service android:name="seatback.com.seatback.services.TimeService" />
+        <service android:name="seatback.com.seatback.services.MyFirebaseMessagingService" android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+        <service android:name="seatback.com.seatback.services.FirebaseIDService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
 
         <activity android:name="seatback.com.seatback.activities.InformationActivity" />
         <activity android:name="seatback.com.seatback.activities.WorkoutActivity" />
@@ -33,6 +48,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Set custom default icon. This is used when no icon is set for incoming notification messages.
+             See README(https://goo.gl/l4GJaQ) for more. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/seat_back_logo" />
+        <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
+             notification message. See README(https://goo.gl/6BKBk7) for more. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/colorAccent" />
+
     </application>
 
 </manifest>

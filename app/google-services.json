@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "821587219419",
+    "firebase_url": "https://seatbackapp.firebaseio.com",
+    "project_id": "seatbackapp",
+    "storage_bucket": "seatbackapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:821587219419:android:5c057b027f8e5368",
+        "android_client_info": {
+          "package_name": "seatback.com.seatback"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "821587219419-ko36a6tpv91psb5rtvnv6k6eeaf3oijo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKd6Etj0totgsTsit82ndw-xNGUBLAC1s"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

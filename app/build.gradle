@@ -39,10 +39,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             zipAlignEnabled true
         }
-        debug {
-            applicationIdSuffix '.debug'
-            versionNameSuffix '.debug'
-        }
+
         android.applicationVariants.all { variant ->
             def appName
             //Check if an applicationName property is supplied; if not use the name of the parent project.
@@ -96,5 +93,12 @@ dependencies {
     compile 'com.github.PhilJay:MPAndroidChart:v3.0.2'
     testCompile 'junit:junit:4.12'
     compile files('libs/YouTubeAndroidPlayerApi.jar')
-    compile 'com.google.android.gms:play-services-auth:8.4.0'
-}
+    compile 'com.google.android.gms:play-services-auth:9.2.0'
+    compile 'com.google.firebase:firebase-core:9.2.0'                        // this line must be included to integrate with Firebase
+    compile 'com.google.firebase:firebase-messaging:9.2.0'                   // this line must be included to use FCM
+
+    compile 'jp.wasabeef:glide-transformations:3.0.1'
+    // If you want to use the GPU Filters
+    compile 'jp.co.cyberagent.android.gpuimage:gpuimage-library:1.4.1'}
+
+apply plugin: 'com.google.gms.google-services'

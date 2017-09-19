@@ -17,11 +17,15 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AlertDialog;
@@ -41,13 +45,13 @@ import com.devpaul.bluetoothutillib.SimpleBluetooth;
 import com.devpaul.bluetoothutillib.dialogs.DeviceDialog;
 import com.devpaul.bluetoothutillib.utils.BluetoothUtility;
 import com.devpaul.bluetoothutillib.utils.SimpleBluetoothListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Handler;
 
 import goldzweigapps.tabs.Builder.EasyTabsBuilder;
 import goldzweigapps.tabs.Items.TabItem;
@@ -62,7 +66,7 @@ import seatback.com.seatback.services.TimeService;
 import seatback.com.seatback.utils.ColorUtils;
 import seatback.com.seatback.utils.Utils;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity implements WorkoutFragment.OnWorkoutFragmentCreated {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     //region variables
@@ -110,11 +114,18 @@ public class MainActivity extends AppCompatActivity{
     //endregion fragments
     //endregion variables
 
+    private Bundle savedNotificationBundle = null;
+
     //region main running place
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(seatback.com.seatback.R.layout.activity_main);
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            // saving the bundle for later use when all fragments will be created.
+            savedNotificationBundle = bundle;
+        }
 
         //force layout to be ltr
         ViewCompat.setLayoutDirection(getWindow().getDecorView(), ViewCompat.LAYOUT_DIRECTION_LTR);
@@ -131,6 +142,8 @@ public class MainActivity extends AppCompatActivity{
         mToolBar = (Toolbar) findViewById(R.id.toolbar_main);
         mEasyTabs = (EasyTabs) findViewById(R.id.easy_tabs);
         //endregion view inflating
+
+        FirebaseMessaging.getInstance().subscribeToTopic("news");
 
         //region fragment creation
         //create the fragments
@@ -320,6 +333,7 @@ public class MainActivity extends AppCompatActivity{
     protected void onStart() {
         super.onStart();
         registerReceiver(timerReceiver, new IntentFilter(TimeService.COUNTDOWN_PACKAGE));
+        registerReceiver(notificationReceiver, new IntentFilter("OPEN_NEW_ACTIVITY"));
         SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
         String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
         try {
@@ -332,6 +346,35 @@ public class MainActivity extends AppCompatActivity{
         }
     }
     //endregion main running place
+
+    private BroadcastReceiver notificationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            DialogFragment dialog = new YesNoDialog();
+            Bundle args = new Bundle();
+            args.putString(YesNoDialog.ARG_TITLE, intent.getStringExtra("title"));
+            args.putString(YesNoDialog.ARG_MESSAGE, intent.getStringExtra("body"));
+            args.putBoolean(YesNoDialog.ARG_SHOW_CANCEL, false);
+            args.putInt(YesNoDialog.ARG_INT_VALUE, Integer.parseInt(intent.getStringExtra("posture")));
+
+            dialog.setArguments(args);
+            List<Fragment> fragments = getSupportFragmentManager().getFragments();
+            HomeFragment homeFragment = null;
+            WorkoutFragment workoutFragment = null;
+            for (Fragment f : fragments) {
+                if (f instanceof WorkoutFragment)
+                    workoutFragment = (WorkoutFragment) f;
+            }
+            mEasyTabs.getViewPager().setCurrentItem(1);
+
+            dialog.setTargetFragment(workoutFragment, 100);
+            try{
+                dialog.show(getSupportFragmentManager(), "tag");
+            }
+            catch (IllegalStateException ignored){
+            }
+        }
+    };
 
     //region timer receiver
     private BroadcastReceiver timerReceiver = new BroadcastReceiver() {
@@ -473,6 +516,7 @@ public class MainActivity extends AppCompatActivity{
         if( simpleBluetooth != null)
             simpleBluetooth.endSimpleBluetooth();
         unregisterReceiver(timerReceiver);
+        unregisterReceiver(notificationReceiver);
         if( mTimeService != null)
             mTimeService.onDestroy();
         if( timeServiceConnection != null && isServiceBound == true)
@@ -480,7 +524,6 @@ public class MainActivity extends AppCompatActivity{
         unregisterReceiver(mReceiver);
 //        unbindService();
     }
-
 
     private void parseDataFromString(String data) {
         //remove the start tag and the end tag from the full string
@@ -622,6 +665,7 @@ public class MainActivity extends AppCompatActivity{
                     args.putString(YesNoDialog.ARG_TITLE, "Error");
                     String errorMsg = error.toString() + " " + Utils.getServerURL() + " " + Utils.getConnectecMAC();
                     args.putString(YesNoDialog.ARG_MESSAGE, errorMsg);
+                    args.putBoolean(YesNoDialog.ARG_SHOW_CANCEL, true);
                     dialog.setArguments(args);
                     List<Fragment> fragments = getSupportFragmentManager().getFragments();
                     HomeFragment homeFragment = null;
@@ -643,6 +687,20 @@ public class MainActivity extends AppCompatActivity{
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         helper.add(jsonObjectRequest);
+    }
+
+    @Override
+    public void onWorkoutFragmentCreated() {
+        if( savedNotificationBundle != null){
+            Intent broadcast = new Intent();
+            broadcast.putExtra("title", savedNotificationBundle.getString("title"));
+            broadcast.putExtra("body", savedNotificationBundle.getString("body"));
+            broadcast.putExtra("posture", savedNotificationBundle.getString("posture"));
+            broadcast.setAction("OPEN_NEW_ACTIVITY");
+            sendBroadcast(broadcast);
+
+            savedNotificationBundle = null;
+        }
     }
 
     class UpdateBluetoothMenuTask extends AsyncTask<Void, Void, Void>
@@ -782,14 +840,21 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     };
-    public static class YesNoDialog extends DialogFragment
+
+    protected class SensorsData{
+        public int posture;
+        ArrayList<Integer> dataReady;
+    }
+
+    public static class YesNoDialog extends android.support.v4.app.DialogFragment
     {
         public static final String ARG_TITLE = "YesNoDialog.Title";
         public static final String ARG_MESSAGE = "YesNoDialog.Message";
+        public static final String ARG_SHOW_CANCEL = "YesNoDialog.ShowCancel";
+        public static final String ARG_INT_VALUE = "YesNoDialog.IntValue";
 
         public YesNoDialog()
         {
-
         }
 
         @Override
@@ -798,34 +863,44 @@ public class MainActivity extends AppCompatActivity{
             Bundle args = getArguments();
             String title = args.getString(ARG_TITLE);
             String message = args.getString(ARG_MESSAGE);
+            boolean showCancel = args.getBoolean(ARG_SHOW_CANCEL);
+            final int imageId = args.getInt(ARG_INT_VALUE);
 
-            return new AlertDialog.Builder(getActivity())
-                    .setTitle(title)
-                    .setMessage(message)
-                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
-                    {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which)
+            if( showCancel == true)
+                return new AlertDialog.Builder(getActivity())
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
                         {
-                            didShowError = false;
-                            getTargetFragment().onActivityResult(getTargetRequestCode(), 102, null);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
-                    {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which)
+                            @Override
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                didShowError = false;
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener()
                         {
-                            getTargetFragment().onActivityResult(getTargetRequestCode(), 101, null);
-                        }
-                    })
-                    .create();
+                            @Override
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                getTargetFragment().onActivityResult(getTargetRequestCode(), 101, null);
+                            }
+                        })
+                        .create();
+            else
+                return new AlertDialog.Builder(getActivity())
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                getTargetFragment().onActivityResult(getTargetRequestCode(), imageId, null);
+                            }
+                        })
+                        .create();
         }
-    }
-
-    protected class SensorsData{
-        public int posture;
-        ArrayList<Integer> dataReady;
     }
 }
 
