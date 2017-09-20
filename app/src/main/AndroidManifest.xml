@@ -40,7 +40,6 @@
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="24604424f5eadd39e0f586963e025492bc58988f" />
-
         <activity android:name="seatback.com.seatback.activities.SplashScreeen"  android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -52,7 +51,7 @@
              See README(https://goo.gl/l4GJaQ) for more. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/seat_back_logo" />
+            android:resource="@drawable/ic_launcher" />
         <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
              notification message. See README(https://goo.gl/6BKBk7) for more. -->
         <meta-data
