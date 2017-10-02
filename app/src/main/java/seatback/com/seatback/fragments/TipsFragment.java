@@ -37,7 +37,8 @@ public class TipsFragment extends Fragment {
          */
         topPressureMap = (PressureMap) view.findViewById(R.id.pressure_map_top);
         bottomPressureMap = (PressureMap) view.findViewById(R.id.pressure_map_bottom);
-
+        topPressureMap.setColors(null);
+        bottomPressureMap.setColors(null);
     }
 
 }

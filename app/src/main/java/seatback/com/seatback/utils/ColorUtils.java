@@ -582,6 +582,8 @@ public class ColorUtils {
         if (progress >= 40) {
             progress = 39;
         }
+        if( progress < 0) progress = 0;
+
         return colors()[progress];
     }
 

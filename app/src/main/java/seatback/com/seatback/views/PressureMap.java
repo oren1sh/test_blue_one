@@ -9,6 +9,7 @@ import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import seatback.com.seatback.utils.ColorUtils;
 
@@ -33,7 +34,7 @@ public class PressureMap extends View {
     }
 
     private List<Integer> colors;
-    private List<Integer> lastUsedColors = new ArrayList<>();
+    static private List<Integer> lastUsedColors = new ArrayList<>();
 
     public PressureMap(Context context) {
         super(context);
@@ -50,6 +51,10 @@ public class PressureMap extends View {
     private void init() {
         colors = new ArrayList<>();
         paint = new Paint();
+        if( lastUsedColors.size() == 0){
+            for(int i = 0; i < 72; i++)
+                lastUsedColors.add(i, 0);
+        }
 //        addCircles();
     }
     @Override
@@ -75,45 +80,34 @@ public class PressureMap extends View {
         int rowCount = 0;
         int xDrawPosition = circleRadius;
         int yDrawPosition = circleRadius;
-            for (int i = 0; i != 36; i++) {
-                if (colors == null || colors.size() < 72) {
-                    if (drawenOnce) {
-                        int pressureLevel = lastUsedColors.get(isTop() ? i : i + 36);
-                        paint.setColor(ColorUtils.getColor(pressureLevel));
-                    } else {
-                        paint.setColor(ColorUtils.BLUE_100);
-                    }
+        if ((colors == null || colors.size() < 72) && lastUsedColors.size() > 0)
+            colors = lastUsedColors;
+        for (int i = 0; i < 36; i++) {
+            int pressureLevel = colors.get(isTop() ? i : i + 36);
+            paint.setColor(ColorUtils.getColor(pressureLevel));
 
-//                paint.setColor(Color.RGBUtils.getColorForPressure(colors.get(i + (top ? 0 : 36))));
-//                Log.d(TAG, "drawPressureMap: " + Utils.getColorForPressure(colors.get(i + (top ? 0 : 36))));
-                } else {
-                    int pressureLevel = colors.get(isTop() ? i : i + 36);
-                    paint.setColor(ColorUtils.getColor(pressureLevel));
-                    drawenOnce = true;
-                    lastUsedColors = colors;
-                }
-
-
-
-                if (rowCount == 6) {
-                    rowCount = 0;
-                    xDrawPosition = circleRadius;
-                    yDrawPosition += (circleRadius * 2);
-                }
-                canvas.drawCircle(xDrawPosition, yDrawPosition, circleRadius, paint);
-                xDrawPosition += (circleRadius * 2);
-                rowCount++;
+            if (rowCount == 6) {
+                rowCount = 0;
+                xDrawPosition = circleRadius;
+                yDrawPosition += (circleRadius * 2);
             }
-
-
-
-//        addCircles(Canvas canvas);
-//        for (Circle circle : pressureMapArray) {
-//            canvas.drawCircle(circle.getCx(), circle.getCy(), circle.getRadius(), circle.getPaint());
-//        }
+            canvas.drawCircle(xDrawPosition, yDrawPosition, circleRadius, paint);
+            xDrawPosition += (circleRadius * 2);
+            rowCount++;
+        }
+        if( colors != null)
+            lastUsedColors = colors;
     }
 
     public void setColors(List<Integer> colors) {
+//        if( colors != null) {
+//            Random rand = new Random();
+//
+//            for (int index = 0; index < colors.size(); index++) {
+//                colors.set(index, rand.nextInt(500) + 1);
+//            }
+//        }
+//
         this.colors = colors;
         invalidate();
     }
