@@ -33,8 +33,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:paddingTop="30dp"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="70dp"
                 android:text="@string/workout_top_left"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
@@ -48,14 +48,15 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
+                ImageViewWithPrecentage:precentage="0.7"
                 android:id="@+id/img_exercise_top_middle"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:paddingTop="30dp"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="70dp"
                 android:text="@string/workout_top_middle"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
@@ -70,14 +71,15 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
+                ImageViewWithPrecentage:precentage="0.7"
                 android:id="@+id/img_exercise_top_right"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:paddingTop="30dp"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="70dp"
                 android:text="@string/workout_top_right"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
@@ -98,14 +100,15 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
+                ImageViewWithPrecentage:precentage="0.7"
                 android:id="@+id/img_exercise_middle_left"  />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:paddingTop="30dp"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="70dp"
                 android:text="@string/workout_middle_left"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
@@ -119,14 +122,15 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
+                ImageViewWithPrecentage:precentage="0.7"
                 android:id="@+id/img_exercise_middle_right"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:paddingTop="30dp"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="70dp"
                 android:text="@string/workout_middle_middle"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
@@ -140,14 +144,15 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
+                ImageViewWithPrecentage:precentage="0.7"
                 android:id="@+id/img_exercise_middle_right_most"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:paddingTop="30dp"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="70dp"
                 android:text="@string/workout_middle_right"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
@@ -173,8 +178,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:paddingTop="30dp"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="70dp"
                 android:text="@string/workout_bottom_left"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
@@ -195,8 +200,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:paddingTop="30dp"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="70dp"
                 android:text="@string/workout_bottom_middle"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
@@ -210,14 +215,15 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:clickable="true"
+                ImageViewWithPrecentage:precentage="0.7"
                 android:id="@+id/img_exercise_bottom_right"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:paddingTop="30dp"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="70dp"
                 android:text="@string/workout_bottom_right"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>

@@ -36,11 +36,11 @@ public class InformationActivity extends AppCompatActivity {
               InformationActivity.super.onBackPressed();
             }
         });
-        if(!BuildConfig.DEBUG){
-            Glide.with(this).load(R.drawable.chair).into(mInformationView);
-            findViewById(R.id.about_id).setVisibility(View.INVISIBLE);
-        }
-        else
+//        if(!BuildConfig.DEBUG){
+//            Glide.with(this).load(R.drawable.chair).into(mInformationView);
+//            findViewById(R.id.about_id).setVisibility(View.INVISIBLE);
+//        }
+//        else
         {
             mInformationView.setVisibility(View.INVISIBLE);
             findViewById(R.id.about_id).setVisibility(View.VISIBLE);

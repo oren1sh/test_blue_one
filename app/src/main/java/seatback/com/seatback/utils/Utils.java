@@ -18,11 +18,11 @@ import seatback.com.seatback.R;
 
 public class Utils {
     private static final String TAG = Utils.class.getSimpleName();
-    private static String connectedMAC = "";
-    private static final String[] postureNames = {"standing", "good", "bending forward", "slump", "legonleg right", "legonleg left", "unequal right", "unequal left", "unknown"};
+    private static String connectedMAC = "", connectedName = "";
+    private static final String[] postureNames = {"standing", "good", "bending forward", "slump", "tilt left", "tilt right", "nope 6", "nope 7", "unknown"};
 
     public static String getPostureName(int postureIndex){
-// 0=standing // 1=good // 2=banding foward // 3= slump // 4= legonleg right //5= legonleg left// 6= unequal right //7= unequal left //8=Unknown
+// 0=standing // 1=good // 2=banding forward // 3= slump // 4= left  //5= right left// 6= nope //7= nope //8=Unknown
         if( postureIndex > postureNames.length)
             return "Unknown";
         else
@@ -61,8 +61,9 @@ public class Utils {
 if(!BuildConfig.DEBUG)
         return  "http://52.51.116.134:10010";
 else
-//    return  "http://52.51.116.134:10010";
-        return  "http://10.0.0.5:10010";
+    return  "http://52.51.116.134:10010";
+//        return  "http:" + "//10.0.0.5:10020";
+//        return  "http://192.168.0.94:10020";
     }
 
     public static String getConnectecMAC(){
@@ -71,6 +72,12 @@ else
 
     public static void setConnectecMAC(String MAC){
         connectedMAC = MAC;
+    }
+
+    public static void setConnectecName(String Name){ connectedName = Name;}
+
+    public static String getConnectecName(){
+        return connectedName;
     }
 
     public static String getUserID(Context context) {

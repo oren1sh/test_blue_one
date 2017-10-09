@@ -263,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                 editor.putString("LAST_MAC", device.getAddress());
                 editor.commit();
                 Utils.setConnectecMAC(device.getAddress());
+                Utils.setConnectecName(device.getName());
 
                 //running the timer service when the device is connected
 
@@ -533,13 +534,12 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
         data = data.replace("\r", "");
         String command  = "";
         //splitting the full string by , to get the values
+        simpleBluetooth.sendData(Long.toString(System.currentTimeMillis() / 1000));
         if( data.substring(0, 1).contains("R")) {
-            simpleBluetooth.sendData(Long.toString(System.currentTimeMillis() / 1000));
             if( data.length() > 3)
                 processSensorsData(data.substring(2, data.length()));
         }
         if( data.substring(0, 1).contains("S")) {
-            simpleBluetooth.sendData(Long.toString(System.currentTimeMillis() / 1000));
             if( data.length() > 3)
                 processSD_Data(data.substring(2, data.length()));
         }
@@ -562,33 +562,38 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
 
         String[] values = data.split(",");
 
-        int startOfRow = 0;
+        int valueIndex = 0;
         if( values.length > 0){
             Log.d(TAG, "data = " + data);
             Log.d(TAG, "values.length = " + values.length);
 
-            int numberOfPossiblePostures = Integer.parseInt(values[startOfRow++]);
-            String serverData = (isOnOff ? "OnOff,":"");
+            int numberOfPossiblePostures = 0;
+            try{
+                numberOfPossiblePostures = Integer.parseInt(values[valueIndex++]);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+                String serverData = (isOnOff ? "OnOff,":"");
 
             do {
                 for(int index = 0; index < numberOfPossiblePostures; index++){
 //                Log.d(TAG, "Found for posture " + index  + " the count " + values[startOfRow + index]);
-                    serverData += values[startOfRow + index] + ",";
+                    serverData += values[valueIndex++] + ",";
                 }
 //            Log.d(TAG, "Found the following timestamp " + values[startOfRow + numberOfPossiblePostures + 1]);
-                String deviceTimestampValue = values[startOfRow + numberOfPossiblePostures + 1];
+                String deviceTimestampValue = values[valueIndex];
+                long deviceTimestamp = Long.parseLong(values[valueIndex]);
                 if( isOnOff){
-                    long deviceTimestamp = Long.parseLong(values[startOfRow + numberOfPossiblePostures + 1]);
                     deviceTimestamp = System.currentTimeMillis() - deviceTimestamp;
                     deviceTimestampValue = String.valueOf(deviceTimestamp / 1000);
                 }
-                serverData = deviceTimestampValue + "," + serverData;
+                serverData += deviceTimestampValue + ",";
 
                 updateServerWithData(serverData, "0", 0);
-                startOfRow += numberOfPossiblePostures + 2;
+                valueIndex++;
                 serverData = "";
             }
-            while( startOfRow < (values.length - 1));
+            while( valueIndex < (values.length - 1));
         }
     }
 
@@ -642,6 +647,7 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
             }
 
             jsonObject.put("seatback_id", Utils.getConnectecMAC());
+            jsonObject.put("seatback_name", Utils.getConnectecName());
             jsonObject.put("user_id", Utils.getUserID(this.getBaseContext()));
         } catch (JSONException e) {
             e.printStackTrace();
@@ -663,7 +669,7 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                     DialogFragment dialog = new YesNoDialog();
                     Bundle args = new Bundle();
                     args.putString(YesNoDialog.ARG_TITLE, "Error");
-                    String errorMsg = error.toString() + " " + Utils.getServerURL() + " " + Utils.getConnectecMAC();
+                    String errorMsg = error.toString() + " " + Utils.getServerURL() + " " + Utils.getConnectecName();
                     args.putString(YesNoDialog.ARG_MESSAGE, errorMsg);
                     args.putBoolean(YesNoDialog.ARG_SHOW_CANCEL, true);
                     dialog.setArguments(args);
@@ -676,7 +682,7 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
 
 
                     dialog.setTargetFragment(homeFragment, 100);
-                    dialog.show(getSupportFragmentManager(), "tag");
+//                    dialog.show(getSupportFragmentManager(), "tag");
                     didShowError = true;
                 }
             }

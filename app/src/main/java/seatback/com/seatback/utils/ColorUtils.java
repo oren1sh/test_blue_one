@@ -578,7 +578,7 @@ public class ColorUtils {
 
 
     public static int getColor(int progress) {
-        progress /= 10 + 1;
+        progress /= 15 + 1;
         if (progress >= 40) {
             progress = 39;
         }

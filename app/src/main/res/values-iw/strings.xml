@@ -10,12 +10,12 @@
     <string name="all">כולל</string>
     <string name="month">חודש</string>
     <string name="shows_statistics_image">shows_statistics_image</string>
-    <string name="bluetooth">Connect to device</string>
-    <string name="standing">standing</string>
-    <string name="bending">bending</string>
-    <string name="good_posture">good posture</string>
-    <string name="leg">leg</string>
-    <string name="slouching">slouching</string>
+    <string name="bluetooth">התחבר לכסא</string>
+    <string name="standing">עומד</string>
+    <string name="bending">נוטה קדימה</string>
+    <string name="good_posture">תקין</string>
+    <string name="leg">רגל על רגל</string>
+    <string name="slouching">שפוף</string>
     <string name="circle_Sitting_time">זמן ישיבה</string>
     <string name="sensors_seat">מושב</string>
     <string name="sensors_back">משענת</string>
@@ -30,4 +30,6 @@
     <string name="workout_bottom_middle">גב תחתון</string>
     <string name="workout_bottom_right">כפות ידיים</string>
     <string name="version_number">גרסה:</string>
+    <string name="tilt_right">נוטה ימינה</string>
+    <string name="tilt_left">נוטה שמאלה</string>
 </resources>

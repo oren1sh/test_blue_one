@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -314,6 +315,7 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                Log.d(TAG, error.toString());
             }
         });
 
@@ -363,14 +365,25 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                                 colors.add(Color.GREEN);
                                 break;
                             case "bending":
+                            case "bending forward":
                                 entries.add(new PieEntry(percentage, getString(R.string.bending)));
                                 colors.add(Color.YELLOW);
                                 break;
-                            case "leg":
-                                entries.add(new PieEntry(percentage, getString(R.string.leg)));
+                            case "tilt left":
+                                entries.add(new PieEntry(percentage, getString(R.string.tilt_left)));
                                 colors.add(Color.CYAN);
                                 break;
+                            case "tilt right":
+                                entries.add(new PieEntry(percentage, getString(R.string.tilt_right)));
+                                colors.add(Color.DKGRAY);
+                                break;
+                            case "leg":
+                            case "legonleg right":
+                                entries.add(new PieEntry(percentage, getString(R.string.leg)));
+                                colors.add(Color.BLUE);
+                                break;
                             case "slouching":
+                            case "slump":
                                 entries.add(new PieEntry(percentage, getString(R.string.slouching)));
                                 colors.add(Color.GRAY);
                                 break;
@@ -424,7 +437,7 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                 getString(R.string.slouching),
                 getString(R.string.sensors_unknown)
         };
-        BarDataPoint[] values = new BarDataPoint[6];
+        BarDataPoint[] values = new BarDataPoint[8];
 
 //        float values[] = {0,0,0,0,0,0};
 
@@ -477,16 +490,24 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                                 entries.add(new BarEntry(i, percentage));
                                 break;
                             case "bending":
+                            case "bending forward":
                                 values[2] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.YELLOW);
                                 break;
-                            case "leg":
+                            case "tilt left":
                                 values[3] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.CYAN);
                                 break;
+                            case "tilt right":
+                                values[4] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.DKGRAY);
+                                break;
+                            case "leg":
+                                values[5] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.BLUE);
+                                break;
                             case "slouching":
-                                values[4] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.GRAY);
+                            case "slump":
+                                values[6] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.GRAY);
                                 break;
                             default:
-                                values[5] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.BLUE);
+                                values[7] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.BLACK);
                                 break;
                         }
                     }

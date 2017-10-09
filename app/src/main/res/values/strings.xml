@@ -12,8 +12,8 @@
     <string name="shows_statistics_image">shows_statistics_image</string>
     <string name="bluetooth">Connect to device</string>
     <string name="standing">standing</string>
-    <string name="bending">bending</string>
-    <string name="good_posture">good posture</string>
+    <string name="bending">bending forward</string>
+    <string name="good_posture">good</string>
     <string name="leg">leg</string>
     <string name="slouching">slouching</string>
     <string name="circle_Sitting_time">Sitting time</string>
@@ -30,4 +30,6 @@
     <string name="workout_bottom_middle">Lower Back</string>
     <string name="workout_bottom_right">Palms</string>
     <string name="version_number">Version:</string>
+    <string name="tilt_right">Tilt Right</string>
+    <string name="tilt_left">Tilt Left</string>
 </resources>
