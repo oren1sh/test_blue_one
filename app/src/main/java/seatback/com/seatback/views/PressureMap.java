@@ -73,7 +73,7 @@ public class PressureMap extends View {
      */
     private void drawPressureMap(Canvas canvas) {
 
-        height = getMeasuredHeight();
+        height = getMeasuredHeight()/2;
         width = getMeasuredWidth();
         circleRadius = ((width + height) / 36) * (int) Math.PI / 2;
 //        circleRadius = (width + height) / 36 * 2;

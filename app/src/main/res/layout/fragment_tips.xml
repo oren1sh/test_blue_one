@@ -1,40 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#f7fff7"
+    android:background="@color/md_white"
+    android:orientation="vertical"
+    android:layout_weight="1"
     android:id="@+id/tips_fragment">
 
-    <seatback.com.seatback.views.PressureMap
-        android:id="@+id/pressure_map_top"
-        android:layout_width="@dimen/_170sdp"
-        android:layout_height="@dimen/_170sdp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="@dimen/_20sdp"
-        android:layout_marginTop="@dimen/_20sdp"/>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_centerHorizontal="true"
+    android:layout_gravity="center_horizontal"
+    android:orientation="vertical"
+    android:layout_weight="0.5">
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:layout_weight="1">
+    >
     <seatback.com.seatback.views.VerticalTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toLeftOf="@id/pressure_map_top"
         android:layout_marginTop="@dimen/_70sdp"
+        android:layout_marginLeft="@dimen/_10sdp"
         android:text="@string/sensors_back"
         android:textSize="40sp"/>
     <seatback.com.seatback.views.PressureMap
-        android:id="@+id/pressure_map_bottom"
-        android:layout_width="@dimen/_170sdp"
-        android:layout_height="@dimen/_170sdp"
-        android:layout_below="@+id/pressure_map_top"
+        android:id="@+id/pressure_map_top"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/_30sdp"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="@dimen/_30sdp"/>
-    <seatback.com.seatback.views.VerticalTextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/pressure_map_top"
-        android:layout_centerHorizontal="true"
-        android:layout_toLeftOf="@id/pressure_map_bottom"
-        android:text="@string/sensors_seat"
-        android:layout_marginTop="@dimen/_50sdp"
-        android:textSize="40sp"
-        />
+        android:layout_centerVertical="true"
+        android:layout_weight="0.5"
+/>
 
+</LinearLayout>
 </RelativeLayout>
+
+</LinearLayout>
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_centerHorizontal="true"
+    android:layout_gravity="center_horizontal"
+    android:orientation="vertical"
+    android:layout_weight="0.5">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:layout_weight="1">
+        >
+    <seatback.com.seatback.views.VerticalTextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_below="@+id/pressure_map_top"
+    android:layout_marginLeft="@dimen/_10sdp"
+    android:layout_centerHorizontal="true"
+    android:text="@string/sensors_seat"
+    android:layout_marginTop="@dimen/_50sdp"
+    android:textSize="40sp"
+    />
+    <seatback.com.seatback.views.PressureMap
+        android:id="@+id/pressure_map_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/pressure_map_top"
+        android:layout_weight="0.5"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_marginBottom="@dimen/_30sdp" />
+    </LinearLayout>
+</LinearLayout>
+</LinearLayout>

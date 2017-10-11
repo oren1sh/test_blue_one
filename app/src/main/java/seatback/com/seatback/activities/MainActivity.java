@@ -328,13 +328,13 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
         //adds listener to the bluetooth library
         simpleBluetooth.setSimpleBluetoothListener(simpleBluetoothListener);
         //endregion bluetooth
+        registerReceiver(timerReceiver, new IntentFilter(TimeService.COUNTDOWN_PACKAGE));
+        registerReceiver(notificationReceiver, new IntentFilter("OPEN_NEW_ACTIVITY"));
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        registerReceiver(timerReceiver, new IntentFilter(TimeService.COUNTDOWN_PACKAGE));
-        registerReceiver(notificationReceiver, new IntentFilter("OPEN_NEW_ACTIVITY"));
         SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
         String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
         try {
@@ -381,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
     private BroadcastReceiver timerReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getExtras() != null) {
+            if (intent.getExtras() != null ) {
                 long millisUntilFinished = intent.getLongExtra("countdown", 0);
 //                Log.d(TAG, "onReceive: " + millisUntilFinished);
                 List<Fragment> fragments = getSupportFragmentManager().getFragments();
