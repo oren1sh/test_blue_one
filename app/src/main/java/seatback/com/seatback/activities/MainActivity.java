@@ -915,6 +915,10 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
             boolean isOnOff = false;
             String data = originalData;
 
+            if( data.contains("OnOff")){
+                isOnOff = true;
+                data = data.replaceAll("[OnOff]", "");
+            }
             String[] values = data.split(",");
 
             int valueIndex = 0;
@@ -926,8 +930,6 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                 try {
                     if (values[valueIndex].length() > 0)
                         numberOfPossiblePostures = Integer.parseInt(values[valueIndex++]);
-                    else
-                        throw new Exception("Wrong value for SD data");
                     if (numberOfPossiblePostures < 0 || numberOfPossiblePostures > 8)
                         throw new Exception("Wrong value for SD data");
                     while (values[valueIndex].equals("OnOff")) {
@@ -951,12 +953,13 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                 do {
                     for (int index = 0; index < numberOfPossiblePostures; index++) {
 //                Log.d(TAG, "Found for posture " + index  + " the count " + values[startOfRow + index]);
-                        serverData += values[valueIndex++] + ",";
+                        if( values[index].length()>0)
+                            serverData += values[valueIndex++] + ",";
                     }
 //            Log.d(TAG, "Found the following timestamp " + values[startOfRow + numberOfPossiblePostures + 1]);
                     try {
                         String deviceTimestampValue = values[valueIndex];
-                        if (isOnOff) {
+                        if (isOnOff && values[valueIndex].length()>0) {
                             long deviceTimestamp = Long.parseLong(values[valueIndex]);
                             deviceTimestamp = System.currentTimeMillis() - deviceTimestamp;
                             deviceTimestampValue = String.valueOf(deviceTimestamp / 1000);
