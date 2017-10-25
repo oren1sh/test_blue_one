@@ -27,12 +27,14 @@ public class TimeService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        Log.d(TAG, "TimerService onCreate: ");
         lastTime = getSharedPreferences("timer", MODE_PRIVATE);
         //count down timer for 12 hours with tick every second
         countDownTimer = new CountDownTimer(_12HOURS, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 time = _12HOURS - millisUntilFinished + lastTime.getLong("countDown", 0);
+                Log.d(TAG, "TimerService onTick: " + time);
                 timerIntent.putExtra("countdown", time);
                 if (time == _12HOURS) {
                     countDownTimer.onFinish();
@@ -42,6 +44,7 @@ public class TimeService extends Service {
 
             @Override
             public void onFinish() {
+                Log.d(TAG, "TimerService onFinish");
                 lastTime.edit().putLong("countDown", time).apply();
             }
         };
@@ -52,24 +55,33 @@ public class TimeService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy: " + time);
+        Log.d(TAG, "TimerService onDestroy: " + time);
         lastTime.edit().putLong("countDown", time).apply();
     }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand(intent, flags, startId);
+        Log.d(TAG, "TimerService onStartCommand: ");
+        return Service.START_STICKY;
+//        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        Log.d(TAG, "onUnbind: " + time);
+        Log.d(TAG, "TimerService onUnbind: " + time);
         lastTime.edit().putLong("countDown", time).apply();
         return super.onUnbind(intent);
     }
 
     @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.d(TAG, "TimerService onTaskRemoved: " + time);
+        lastTime.edit().putLong("countDown", time).apply();
+        super.onTaskRemoved(rootIntent);
+    }
+
+    @Override
     public IBinder onBind(Intent arg0) {
-        return binder;
+        return null;
     }
 
     public class TimeBinder extends Binder {

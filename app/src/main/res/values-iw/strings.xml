@@ -16,7 +16,7 @@
     <string name="good_posture">תקין</string>
     <string name="leg">רגל על רגל</string>
     <string name="slouching">שפוף</string>
-    <string name="circle_Sitting_time">זמן ישיבה</string>
+    <string name="circle_Sitting_time">זמן חיבור יומי מצטבר</string>
     <string name="sensors_seat">מושב</string>
     <string name="sensors_back">משענת</string>
     <string name="sensors_unknown">לא ידוע</string>
@@ -32,4 +32,6 @@
     <string name="version_number">גרסה:</string>
     <string name="tilt_right">נוטה ימינה</string>
     <string name="tilt_left">נוטה שמאלה</string>
+    <string name="no_data_to_show">אין מידע עבור התקופה המבוקשת.</string>
+    <string name="bad_posture">לא תקין</string>
 </resources>

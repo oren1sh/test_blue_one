@@ -13,11 +13,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.bumptech.glide.util.Util;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
@@ -30,6 +34,7 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.formatter.IValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
@@ -38,18 +43,24 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import seatback.com.seatback.R;
 import seatback.com.seatback.activities.MainActivity;
 import seatback.com.seatback.application.SeatBackApplication;
+import seatback.com.seatback.utils.BarPercentageFormatter;
+import seatback.com.seatback.utils.BarValueFormatter;
 import seatback.com.seatback.utils.DayAxisValueFormatter;
+import seatback.com.seatback.utils.PercentageFormatter;
 import seatback.com.seatback.utils.Utils;
 
 
@@ -63,8 +74,8 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
     private ImageView statisticImage;
     private SeatBackApplication helper = SeatBackApplication.getInstance();
     private static final String TAG = MainActivity.class.getSimpleName();
-    private PieChart chart;
-    private BarChart chart1;
+    private PieChart pieChart;
+    private BarChart barChar;
 
     @Override
     public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
@@ -115,14 +126,18 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
         context = rootView.getContext();
 
         // get a layout defined in xml
-        chart = (PieChart) rootView.findViewById(R.id.chart1);
-        chart.getDescription().setEnabled(false);
-//        rl.addView(chart); // add the programmatically created chart
+        pieChart = (PieChart) rootView.findViewById(R.id.chart1);
+        pieChart.getDescription().setEnabled(false);
+//        rl.addView(pieChart); // add the programmatically created pieChart
 
-        chart.setHoleRadius(45f);
-        chart.setTransparentCircleRadius(50f);
+        pieChart.setHoleRadius(45f);
+        pieChart.setUsePercentValues(true);
+        pieChart.setNoDataText(getString(R.string.no_data_to_show));
+        pieChart.setEntryLabelColor(Color.BLACK);
+        pieChart.setTransparentCircleRadius(50f);
+//        pieChart.setEntryLabelTextSize(10);
 
-        Legend l = chart.getLegend();
+        Legend l = pieChart.getLegend();
         l.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
         l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
         l.setOrientation(Legend.LegendOrientation.VERTICAL);
@@ -144,40 +159,30 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
 
         sendRequest(Long.toString(seconds),Long.toString(to_seconds), REPORT_PRIOD.DAY);
 
-        chart1 = (BarChart) rootView.findViewById(R.id.chart2);
-        chart1.getDescription().setEnabled(false);
-//        rl.addView(chart); // add the programmatically created chart
+        barChar = (BarChart) rootView.findViewById(R.id.chart2);
+        barChar.getDescription().setEnabled(false);
 
-        chart1.setOnChartGestureListener(this);
+        barChar.setOnChartGestureListener(this);
+        barChar.setNoDataText(getString(R.string.no_data_to_show));
 
-        IAxisValueFormatter xAxisFormatter = new DayAxisValueFormatter(chart1);
-
-        XAxis xAxis = chart1.getXAxis();
+        XAxis xAxis = barChar.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
         xAxis.setGranularity(1f); // only intervals of 1 day
         xAxis.setLabelCount(7);
+        DayAxisValueFormatter xAxisFormatter = new DayAxisValueFormatter(barChar);
         xAxis.setValueFormatter(xAxisFormatter);
 
-//        MyMarkerView mv = new MyMarkerView(getActivity(), R.layout.custom_marker_view);
-//        mv.setChartView(mChart); // For bounds control
-//        chart1.setMarker(mv);
+        YAxis yAxis = barChar.getAxisLeft();
+        BarPercentageFormatter yAxisFormatter = new BarPercentageFormatter();
+        yAxis.setValueFormatter(yAxisFormatter);
+        yAxis.setAxisMinimum(0f); // this replaces setStartAtZero(true)
 
-        chart1.setDrawGridBackground(false);
-        chart1.setDrawBarShadow(false);
+        barChar.setDrawGridBackground(false);
+        barChar.setDrawBarShadow(false);
 
-//        Typeface tf = Typeface.createFromAsset(getActivity().getAssets(),"OpenSans-Light.ttf");
-
-        YAxis leftAxis = chart1.getAxisLeft();
-        leftAxis.setAxisMinimum(0f); // this replaces setStartAtZero(true)
-
-        chart1.getAxisRight().setEnabled(false);
-        chart1.getAxisLeft().setDrawGridLines(false);
-
-//        chart1.setData(generateBarData(1, 20000, 12));
-        // programatically add the chart
-//        FrameLayout parent = (FrameLayout) v.findViewById(R.id.parentLayout);
-//        parent.addView(chart1);
+        barChar.getAxisRight().setEnabled(false);
+        barChar.getAxisLeft().setDrawGridLines(false);
 
         return rootView;
     }
@@ -189,15 +194,16 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
         weekButton = (Button) view.findViewById(R.id.button_week);
         monthButton = (Button) view.findViewById(R.id.button_month);
         allButton = (Button) view.findViewById(R.id.button_all);
-//        statisticImage = (ImageView) view.findViewById(R.id.image_statistics);
         // programmatically create a LineChart
-
         Utils.singleSelectionButtons(dayButton, dayButton, weekButton, monthButton, allButton);
-//        Glide.with(context).load(R.drawable.stat_day).into(statisticImage);
+
         dayButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Utils.singleSelectionButtons(dayButton, dayButton, weekButton, monthButton, allButton);
+                Answers.getInstance().logCustom(new CustomEvent("Statistics")
+                        .putCustomAttribute("Report Type", "Daily"));
+
 
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 cal.setTime(new Date()); // compute start of the day for the timestamp
@@ -214,13 +220,15 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                 long to_seconds = cal.getTimeInMillis()/1000;
 
                 sendRequest(Long.toString(seconds),Long.toString(to_seconds), REPORT_PRIOD.DAY);
-//                Glide.with(context).load(R.drawable.stat_day).into(statisticImage);
             }
         });
         weekButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Utils.singleSelectionButtons(weekButton, dayButton, weekButton, monthButton, allButton);
+                Answers.getInstance().logCustom(new CustomEvent("Statistics")
+                        .putCustomAttribute("Report Type", "Weekly"));
+
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 cal.setTime(new Date()); // compute start of the day for the timestamp
                 cal.add(Calendar.DAY_OF_YEAR, -7);
@@ -244,7 +252,8 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
             @Override
             public void onClick(View v) {
                 Utils.singleSelectionButtons(monthButton, dayButton, weekButton, monthButton, allButton);
-//                Glide.with(context).load(R.drawable.stat_month).into(statisticImage);
+                Answers.getInstance().logCustom(new CustomEvent("Statistics")
+                        .putCustomAttribute("Report Type", "Monthly"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 cal.setTime(new Date()); // compute start of the day for the timestamp
                 cal.add(Calendar.MONTH, -1);
@@ -268,6 +277,8 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
             @Override
             public void onClick(View v) {
                 Utils.singleSelectionButtons(allButton, dayButton, weekButton, monthButton, allButton);
+                Answers.getInstance().logCustom(new CustomEvent("Statistics")
+                        .putCustomAttribute("Report Type", "All"));
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 cal.setTime(new Date()); // compute start of the day for the timestamp
                 cal.add(Calendar.MONTH, -3);
@@ -290,6 +301,7 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
     }
 
     private void sendRequest(String from_date, String to_date, final REPORT_PRIOD period){
+        if( ((MainActivity)getContext()).isLoggedIn == false) return;
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("seatback_id", Utils.getConnectecMAC());
@@ -317,7 +329,15 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, error.toString());
             }
-        });
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("api_key",Utils.getAPITokenId());
+                //..add other headers
+                return params;
+            }
+        };
 
         int socketTimeout = 30000;//30 seconds - change to what you want
         RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
@@ -329,8 +349,8 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
         List<PieEntry> entries = new ArrayList<>();
         ArrayList<Integer> colors = new ArrayList<Integer>();
 
-        chart1.setVisibility(View.INVISIBLE);
-        chart.setVisibility(View.VISIBLE);
+        barChar.setVisibility(View.INVISIBLE);
+        pieChart.setVisibility(View.VISIBLE);
 
         for(int i= 0; i< response.length(); i++){
             try {
@@ -345,51 +365,61 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                     year = obj.getInt("year");
                     month = obj.getInt("month");
                     day = obj.getInt("day");
-                }
-                catch (JSONException e){
-                }
-                try {
-                    JSONArray postures = obj.getJSONArray("posturedata");
-                    for (int j = 0; j < postures.length(); j++) {
-                        JSONObject postureIndx = postures.getJSONObject(j);
-                        cnt = postureIndx.getInt("cnt");
-                        float percentage = ((float)cnt/(float)total)*100f;
-
-                        switch( postureIndx.getString("posture")){
-                            case "good":
-                                entries.add(new PieEntry(percentage, getString(R.string.good_posture)));
-                                colors.add(Color.GREEN);
-                                break;
-                            case "standing":
-                                entries.add(new PieEntry(percentage, getString(R.string.standing)));
-                                colors.add(Color.GREEN);
-                                break;
-                            case "bending":
-                            case "bending forward":
-                                entries.add(new PieEntry(percentage, getString(R.string.bending)));
-                                colors.add(Color.YELLOW);
-                                break;
-                            case "tilt left":
-                                entries.add(new PieEntry(percentage, getString(R.string.tilt_left)));
-                                colors.add(Color.CYAN);
-                                break;
-                            case "tilt right":
-                                entries.add(new PieEntry(percentage, getString(R.string.tilt_right)));
-                                colors.add(Color.DKGRAY);
-                                break;
-                            case "leg":
-                            case "legonleg right":
-                                entries.add(new PieEntry(percentage, getString(R.string.leg)));
-                                colors.add(Color.BLUE);
-                                break;
-                            case "slouching":
-                            case "slump":
-                                entries.add(new PieEntry(percentage, getString(R.string.slouching)));
-                                colors.add(Color.GRAY);
-                                break;
-                            default:
-                                break;
+                    float percentage = 0;
+                    try {
+                        cnt = obj.getInt("standing");
+                        if (cnt != 0) {
+                            percentage = calculatePercentage(cnt, total);
+                            entries.add(new PieEntry(percentage, getString(R.string.standing)));
+                            colors.add(Color.GREEN);
                         }
+                    } catch (JSONException e){
+                    }
+
+                    try {
+                    cnt = obj.getInt("good");
+                    if( cnt != 0 && total > 0){
+                        percentage = calculatePercentage(cnt, total);
+                        entries.add(new PieEntry(percentage, getString(R.string.good_posture)));
+                        colors.add(Color.GREEN);
+                    }
+                    } catch (JSONException e){
+                    }
+                    try{
+                    cnt = obj.getInt("bending_forward");
+                    if( cnt != 0 && total > 0){
+                        percentage = calculatePercentage(cnt, total);
+                        entries.add(new PieEntry(percentage, getString(R.string.bending)));
+                        colors.add(Color.YELLOW);
+                    }
+                    } catch (JSONException e){
+                    }
+                    try{
+                    cnt = obj.getInt("slump");
+                    if( cnt != 0 && total > 0){
+                        percentage = calculatePercentage(cnt, total);
+                        entries.add(new PieEntry(percentage, getString(R.string.slouching)));
+                        colors.add(Color.GRAY);
+                    }
+                    } catch (JSONException e){
+                    }
+                    try{
+                    cnt = obj.getInt("tilt_left");
+                    if( cnt != 0 && total > 0){
+                        percentage = calculatePercentage(cnt, total);
+                        entries.add(new PieEntry(percentage, getString(R.string.tilt_left)));
+                        colors.add(Color.CYAN);
+                    }
+                    } catch (JSONException e){
+                    }
+                    try{
+                    cnt = obj.getInt("tilt_right");
+                    if( cnt != 0 && total > 0){
+                        percentage = calculatePercentage(cnt, total);
+                        entries.add(new PieEntry(percentage, getString(R.string.tilt_right)));
+                        colors.add(Color.CYAN);
+                    }
+                    } catch (JSONException e){
                     }
                 }
                 catch (JSONException e){
@@ -398,15 +428,26 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                 e.printStackTrace();
             }
         }
-        PieDataSet dataSet = new PieDataSet(entries, "");
-        dataSet.setSliceSpace(3f);
+        if( entries.size()>0) {
+            PieDataSet dataSet = new PieDataSet(entries, "");
+            dataSet.setSliceSpace(3f);
+            IValueFormatter valueFormatter = new PercentageFormatter();
+            dataSet.setValueFormatter(valueFormatter);
 
-        PieData data = new PieData(dataSet);
-        dataSet.setColors(colors);
+            PieData data = new PieData(dataSet);
+            data.setValueTextSize(12f);
+            dataSet.setColors(colors);
 
-        chart.setData(data);
-        chart.invalidate();
+            pieChart.setData(data);
+        }
+        pieChart.invalidate();
     }
+    private float calculatePercentage(int cnt, int total){
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        float percentage = ((float)cnt/(float)total)*100f;
+        return Float.valueOf(decimalFormat.format(percentage));
+    }
+
     private void drawStackedBarChar(JSONArray response){
         class BarDataPoint {
             public BarDataPoint(float val, String pos, int col){
@@ -439,10 +480,8 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
         };
         BarDataPoint[] values = new BarDataPoint[8];
 
-//        float values[] = {0,0,0,0,0,0};
-
-        chart.setVisibility(View.INVISIBLE);
-        chart1.setVisibility(View.VISIBLE);
+        pieChart.setVisibility(View.INVISIBLE);
+        barChar.setVisibility(View.VISIBLE);
         ArrayList<BarEntry> entries = new ArrayList<BarEntry>();
 
         ArrayList<String> axisValues = new ArrayList<String>();
@@ -469,92 +508,43 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                     } catch (ParseException e) {
                         e.printStackTrace();
                     }
+                    float percentage = 0;
+                    try{
+                    cnt = obj.getInt("good");
+                    if( cnt != 0){
+                        percentage = ((float)cnt/(float)total)*100f;
+                        values[0] = new BarDataPoint(percentage, getString(R.string.good_posture), Color.GREEN);
+                        entries.add(new BarEntry(i, percentage));
+                    }
+                    } catch (JSONException e){
+                    }
                 }
                 catch (JSONException e){
                     continue;
                 }
-                try {
-                    JSONArray postures = obj.getJSONArray("posturedata");
-                    for( int j = 0; j < postures.length(); j++){
-                        JSONObject postureIndx = postures.getJSONObject(j);
-                        cnt = postureIndx.getInt("cnt");
-                        float percentage = ((float)cnt/(float)total)*100f;
-
-                        switch( postureIndx.getString("posture")){
-                            case "good":
-                                values[0] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.GREEN);
-                                entries.add(new BarEntry(i, percentage));
-                                break;
-                            case "standing":
-                                values[1] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.RED);
-                                entries.add(new BarEntry(i, percentage));
-                                break;
-                            case "bending":
-                            case "bending forward":
-                                values[2] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.YELLOW);
-                                break;
-                            case "tilt left":
-                                values[3] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.CYAN);
-                                break;
-                            case "tilt right":
-                                values[4] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.DKGRAY);
-                                break;
-                            case "leg":
-                                values[5] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.BLUE);
-                                break;
-                            case "slouching":
-                            case "slump":
-                                values[6] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.GRAY);
-                                break;
-                            default:
-                                values[7] = new BarDataPoint(percentage, postureIndx.getString("posture"), Color.BLACK);
-                                break;
-                        }
-                    }
-                }
-                catch (JSONException e){
-                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
-            int valuesLength = 0;
-            for(BarDataPoint val:values){
-               if( val.value > 0f && val.color == Color.GREEN)
-                   valuesLength++;
-            }
-            float[] valuesArray = new float[valuesLength];
-            BarDataPoint[] values1 = new BarDataPoint[6];
-            int[] colors1 = new int[valuesLength];
-            int indx = 0;
-            for(BarDataPoint val:values){
-                if( val.value > 0f && val.color == Color.GREEN){
-                    values1[indx] = val;
-                    valuesArray[indx] = val.value;
-                    colors1[indx++] = val.color;
-                }
-            }
-
-//            entries.clear();
         }
 
+        if( entries.size() > 0) {
+            BarDataSet ds = new BarDataSet(entries, "");
+            ds.setColor(Color.GREEN);
+            ds.setStackLabels(labels);
+            sets.add(ds);
 
-        BarDataSet ds = new BarDataSet(entries, "");
-        ds.setColor(Color.GREEN);
-        ds.setStackLabels(labels);
-        sets.add(ds);
+            XAxis xAxis = barChar.getXAxis();
+            DayAxisValueFormatter xAxisFormatter = (DayAxisValueFormatter)xAxis.getValueFormatter();
+            xAxisFormatter.setAxisValues(axisValues);
 
-        XAxis xAxis = chart1.getXAxis();
-        DayAxisValueFormatter xAxisFormatter = (DayAxisValueFormatter)xAxis.getValueFormatter();
-        xAxisFormatter.setAxisValues(axisValues);
+            BarData d = new BarData(sets);
+            BarValueFormatter valueFormatter = new BarValueFormatter();
+            d.setValueFormatter(valueFormatter);
+            d.setValueTextSize(12f);
+            barChar.setData(d);
+        }
 
-        BarData d = new BarData(sets);
-//        BarData d = generateBarData(1, 100, 5);
-        chart1.setData(d);
-
-//        chart1.getLegend().setExtra(new LegendEntry[]{new LegendEntry("Standing", Legend.LegendForm.DEFAULT, Float.NaN, Float.NaN, null, Color.GREEN)});
-
-        chart1.invalidate();
+        barChar.invalidate();
     }
     private String[] mLabels = new String[] { "Company A", "Company B", "Company C", "Company D", "Company E", "Company F" };
 //    private String[] mXVals = new String[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec" };

@@ -17,11 +17,13 @@
     android:layout_weight="0.5">
 <RelativeLayout
     android:layout_width="match_parent"
+    android:layout_gravity="center_horizontal"
     android:layout_height="match_parent">
 
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_gravity="center_horizontal"
     android:orientation="horizontal"
     android:layout_weight="1">
     >
@@ -29,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/_70sdp"
-        android:layout_marginLeft="@dimen/_10sdp"
+        android:layout_marginLeft="@dimen/_30sdp"
         android:text="@string/sensors_back"
         android:textSize="40sp"/>
     <seatback.com.seatback.views.PressureMap
@@ -39,8 +41,7 @@
         android:layout_marginTop="@dimen/_30sdp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_weight="0.5"
-/>
+        />
 
 </LinearLayout>
 </RelativeLayout>
@@ -65,7 +66,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_below="@+id/pressure_map_top"
-    android:layout_marginLeft="@dimen/_10sdp"
+    android:layout_marginLeft="@dimen/_30sdp"
     android:layout_centerHorizontal="true"
     android:text="@string/sensors_seat"
     android:layout_marginTop="@dimen/_50sdp"

@@ -9,6 +9,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.widget.Button;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import seatback.com.seatback.BuildConfig;
 import seatback.com.seatback.R;
 
@@ -18,7 +21,7 @@ import seatback.com.seatback.R;
 
 public class Utils {
     private static final String TAG = Utils.class.getSimpleName();
-    private static String connectedMAC = "", connectedName = "";
+    private static String connectedMAC = "", connectedName = "", apiTokenID = "p4Mk3kEJwA5ZMXVxwNCRDUy3KKvdV2t4vSiU39Y2";
     private static final String[] postureNames = {"standing", "good", "bending forward", "slump", "tilt left", "tilt right", "nope 6", "nope 7", "unknown"};
 
     public static String getPostureName(int postureIndex){
@@ -47,9 +50,9 @@ public class Utils {
             case 3:
                 return R.drawable.slouching;
             case 4:
-                return R.drawable.leg;
+                return R.drawable.lean2good;
             case 5:
-                return R.drawable.leg;
+                return R.drawable.lean2good;
             case 6:
             default:
                 break;
@@ -61,11 +64,18 @@ public class Utils {
 if(!BuildConfig.DEBUG)
         return  "http://52.51.116.134:10010";
 else
-    return  "http://52.51.116.134:10010";
-//        return  "http:" + "//10.0.0.5:10020";
+//    return  "http://52.51.116.134:10010";
+        return  "http:" + "//10.0.0.11:10020";
 //        return  "http://192.168.0.94:10020";
     }
 
+    public static String getAPITokenId(){
+        return apiTokenID;
+    }
+
+    public static void setAPITokenId(String token){
+        apiTokenID = token;
+    }
     public static String getConnectecMAC(){
         return connectedMAC;
     }
@@ -81,6 +91,17 @@ else
     }
 
     public static String getUserID(Context context) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if( currentUser != null) {
+            String userID = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+            return userID;
+        }
+        else
+        {
+            return "nope@seatback.co";
+        }
+    }
+    public static String getDeviceID(Context context) {
         String device_unique_id = Settings.Secure.getString(context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
 

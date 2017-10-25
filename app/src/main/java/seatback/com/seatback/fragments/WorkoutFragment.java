@@ -11,16 +11,22 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.bumptech.glide.Glide;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import jp.wasabeef.glide.transformations.BlurTransformation;
 import seatback.com.seatback.R;
@@ -64,7 +70,7 @@ public class WorkoutFragment extends Fragment implements View.OnClickListener{
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
 
-        if( workoutNumber == -1 && isVisibleToUser == true){
+        if( workoutNumber == -1 && isVisibleToUser == true && getView() != null){
             getView().findViewById(R.id.single_workout_image_layout).setVisibility(View.INVISIBLE);
             getView().findViewById(R.id.full_workout_images).setVisibility(View.VISIBLE);
             loadImages(getView());
@@ -196,6 +202,7 @@ public class WorkoutFragment extends Fragment implements View.OnClickListener{
     private void showExercise(String videoID) {
         Intent moveToExerciseIntent = new Intent(context, WorkoutActivity.class);
         moveToExerciseIntent.putExtra(WorkoutActivity.DRAWABLE_INTENT_KEY, videoID);
+        Answers.getInstance().logCustom(new CustomEvent("Workout").putCustomAttribute("VideoID", videoID));
         startActivity(moveToExerciseIntent);
     }
     private void sendRequest(){
@@ -219,7 +226,15 @@ public class WorkoutFragment extends Fragment implements View.OnClickListener{
             @Override
             public void onErrorResponse(VolleyError error) {
             }
-        });
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("api_key",Utils.getAPITokenId());
+                //..add other headers
+                return params;
+            }
+        };
 
         int socketTimeout = 30000;//30 seconds - change to what you want
         RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);

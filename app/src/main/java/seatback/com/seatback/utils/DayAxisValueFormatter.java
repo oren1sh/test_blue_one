@@ -24,7 +24,7 @@ public class DayAxisValueFormatter implements IAxisValueFormatter {
     }
     @Override
     public String getFormattedValue(float value, AxisBase axis) {
-        if( axisValues.size() >0 && axisValues.size() > (int)value)
+        if( axisValues != null && axisValues.size() >0 && axisValues.size() > (int)value)
             return axisValues.get((int)value);
         else
             return Float.toString(value);

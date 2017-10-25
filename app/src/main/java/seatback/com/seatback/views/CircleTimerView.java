@@ -452,14 +452,14 @@ public class CircleTimerView extends View {
      *
      * @param time
      */
-    public void setCurrentTime(int time) {
+    public void setCurrentTime(int time, long connectedTime) {
             mCurrentTime = time;
             if (mCircleTimerListener != null) {
                 mCircleTimerListener.onTimerSetValueChanged(time);
             }
             this.mCurrentRadian = (float) (time / 300000.0f * 2 * Math.PI / 720);
 //        Log.d(TAG, "setCurrentTime: " + mCurrentRadian);
-            period = new Period(time).toPeriod();
+            period = new Period(connectedTime).toPeriod();
             invalidate();
         }
 

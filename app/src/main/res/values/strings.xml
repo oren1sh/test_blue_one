@@ -16,7 +16,7 @@
     <string name="good_posture">good</string>
     <string name="leg">leg</string>
     <string name="slouching">slouching</string>
-    <string name="circle_Sitting_time">Sitting time</string>
+    <string name="circle_Sitting_time">Daily Connected time</string>
     <string name="sensors_seat">Seat</string>
     <string name="sensors_back">Back</string>
     <string name="sensors_unknown">Unknown</string>
@@ -32,4 +32,6 @@
     <string name="version_number">Version:</string>
     <string name="tilt_right">Tilt Right</string>
     <string name="tilt_left">Tilt Left</string>
+    <string name="no_data_to_show">No data for the selected period of time.</string>
+    <string name="bad_posture">Bad posture</string>
 </resources>

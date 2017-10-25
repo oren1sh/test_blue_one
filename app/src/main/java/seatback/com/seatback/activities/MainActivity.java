@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -34,24 +35,53 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.util.Util;
+import com.crashlytics.android.Crashlytics;
 import com.devpaul.bluetoothutillib.SimpleBluetooth;
 import com.devpaul.bluetoothutillib.dialogs.DeviceDialog;
 import com.devpaul.bluetoothutillib.utils.BluetoothUtility;
 import com.devpaul.bluetoothutillib.utils.SimpleBluetoothListener;
+import com.github.mikephil.charting.data.PieEntry;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInApi;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TimeZone;
 
 import goldzweigapps.tabs.Builder.EasyTabsBuilder;
 import goldzweigapps.tabs.Items.TabItem;
@@ -66,8 +96,9 @@ import seatback.com.seatback.services.TimeService;
 import seatback.com.seatback.utils.ColorUtils;
 import seatback.com.seatback.utils.Utils;
 
-public class MainActivity extends AppCompatActivity implements WorkoutFragment.OnWorkoutFragmentCreated {
+public class MainActivity extends AppCompatActivity implements WorkoutFragment.OnWorkoutFragmentCreated, GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final int RC_SIGN_IN = 2001;
 
     //region variables
     //region time service
@@ -89,13 +120,16 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
     private static final int BLUETOOTH_SCAN_REQUEST = 119;
     private static final int CHOOSE_SERVER_REQUEST = 120;
     private boolean isDeviceConnected = false;
+    public boolean isLoggedIn = false;
+    protected int refreshHomeViewPeriod = 5000; // how often to refresh the home view, in ms.
+    private long connectedDuration = 0;
     private boolean isServiceBound = false;
     private boolean isBluetoothInitized = false;
     private boolean packetStarted = false;
     private CharSequence startChar = "*";
     private CharSequence endChar = "#";
 //    ArrayList<Integer> integerDataFull = new ArrayList<>();
-    String dataFull = "";
+    private String dataFull = "", currentBuffer = "";
     private Menu menu = null;
     SeatBackApplication helper = SeatBackApplication.getInstance();
     private static CountDownTimer myCountdownTimer;
@@ -116,6 +150,134 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
 
     private Bundle savedNotificationBundle = null;
 
+    private GoogleApiClient mGoogleApiClient;
+    private FirebaseAuth mAuth;
+    static private boolean didLanchGoogleActivity = false;
+
+    //runs without a timer by reposting this handler at the end of the runnable
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+
+    @Override
+    public void run() {
+        Log.d(TAG, "timerRunnable");
+
+        if( !isLoggedIn){
+            timerHandler.postDelayed(this, refreshHomeViewPeriod );
+            return;
+        }
+        SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+        try{
+            connectedDuration = sharedPreferences.getLong("CONNECTED_DURATION", 0);
+        } catch(Exception ex){
+            sharedPreferences.edit().remove("CONNECTED_DURATION").apply();
+        }
+        connectedDuration = sharedPreferences.getLong("CONNECTED_DURATION", 0);
+        connectedDuration += refreshHomeViewPeriod;
+
+        if( isDeviceConnected){
+            sharedPreferences.edit().putLong("CONNECTED_DURATION", connectedDuration).apply();
+        }
+
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.setTime(new Date()); // compute start of the day for the timestamp
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        long from_date = cal.getTimeInMillis()/1000;
+
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+        long to_date = cal.getTimeInMillis()/1000;
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("seatback_id", Utils.getConnectecMAC());
+            jsonObject.put("user_id", Utils.getUserID(MainActivity.this));
+            jsonObject.put("from_time", Long.toString(from_date));
+            jsonObject.put("to_time", Long.toString(to_date));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        // Instantiate the RequestQueue.
+
+        // Request a string response from the provided URL.
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Utils.getServerURL() + "/getData", jsonObject,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Log.d(TAG, "response length="+response.length());
+                        String[] badFields = {"bending_forward", "slump", "tilt_left", "tilt_right"};
+                        String[] goodFields = {"standing", "good"};
+                        for(int i= 0; i< response.length(); i++){
+                            int total = 100;
+                            int good = 0, bad = 0;
+                            try {
+                                JSONObject obj = response.getJSONObject(i);
+
+                                total = obj.getInt("total");
+                                for(int index = 0; index < badFields.length; index++){
+                                    try {
+                                        bad += obj.getInt(badFields[index]);
+                                    } catch (JSONException e){
+                                    }
+                                }
+                                for(int index = 0; index < goodFields.length; index++){
+                                    try {
+                                        good += obj.getInt(goodFields[index]);
+                                    } catch (JSONException e){
+                                    }
+                                }
+                                float percentage = (total > 0 ? ((float) (total-good) / (float) total) : 0f);
+                                List<Fragment> fragments = getSupportFragmentManager().getFragments();
+                                HomeFragment homeFragment = null;
+                                for(Fragment f: fragments){
+                                    if( f instanceof HomeFragment)
+                                        homeFragment = (HomeFragment)f;
+                                }
+                                if( homeFragment != null){
+//                                    percentage = percentage * (float)connectedDuration / 43200000f;
+                                    int val = (int) (percentage * 300000f*720f);
+                                    homeFragment.drawPieChart(percentage, connectedDuration);
+                                }
+                            }
+                            catch (JSONException e){
+                            }
+
+                            }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                if( error.toString().contains("AuthFailureError")) {
+                    Log.d(TAG, "VolleyError Auth Error");
+                    refreshToken();
+                }
+                else
+                Log.d(TAG, error.toString());
+            }
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("api_key", Utils.getAPITokenId());
+                //..add other headers
+                return params;
+            }
+        };
+
+        int socketTimeout = 30000;//30 seconds - change to what you want
+        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+        jsonArrayRequest.setRetryPolicy(policy);
+        helper.add(jsonArrayRequest);
+        timerHandler.postDelayed(this, refreshHomeViewPeriod );
+    }
+};
+
     //region main running place
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +289,21 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
             savedNotificationBundle = bundle;
         }
 
+        mAuth = FirebaseAuth.getInstance();
+
+// Configure sign-in to request the user's ID, email address, and basic
+// profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("821587219419-ko36a6tpv91psb5rtvnv6k6eeaf3oijo.apps.googleusercontent.com")
+                .requestEmail()
+                .build();
+        // Build a GoogleApiClient with access to the Google Sign-In API and the
+// options specified by gso.
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
+//        refreshToken();
         //force layout to be ltr
         ViewCompat.setLayoutDirection(getWindow().getDecorView(), ViewCompat.LAYOUT_DIRECTION_LTR);
 
@@ -201,43 +378,55 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
             public void onBluetoothDataReceived(byte[] bytes, String data) {
                 super.onBluetoothDataReceived(bytes, data);
 //                Log.d(TAG, "onBluetoothDataReceived: " + data);
-                if( !packetStarted){
-                    if (!data.contains(startChar)) return;
-                    // need to escape regular expression special characters, such as *.
-                    // in case the starChar will change to something which will be different from
-                    // a special characters, than the below line should be change to remove the escape sequence.
-                    String[] parts = data.split("\\"+startChar.toString());
-                    if( parts.length > 0)
-                        data = parts[0];
-                    if( parts.length == 2)
-                        data = parts[1];
-                    packetStarted = true;
-                }
-                if (!data.contains(endChar)) {
-                    if (data.contains(startChar)) {
-                       dataFull += data;
-                    } else {
-                        dataFull += data;
+                currentBuffer += data;
+                while( currentBuffer.contains(endChar)){
+                    Log.d(TAG, "currentBuffer=" + currentBuffer);
+                    currentBuffer = currentBuffer.replaceAll("[\\\r|\\\n]", "");
+                    String[] parts = currentBuffer.split(endChar.toString());
+                    dataFull = parts[0];
+                    currentBuffer = "";
+                    for(int index = 1; index < parts.length; index++){
+                        currentBuffer += parts[index];
                     }
-                } else {
-                    //changing the data from the string in order to update the ui
-//                    parseDataFromString(dataFull);
-                    data = data.replaceAll("[\\\r|\\\n]", "");
-                    String[] parts = data.split(endChar.toString());
-                    if( parts.length > 0) {
-                        dataFull += parts[0] + endChar;
-                    }
-                    else
-                        dataFull += data;
-//                    integerDataFull =
-                    Log.d(TAG, "data size: " + dataFull);
+                    Log.d(TAG, "datafull="+dataFull);
                     parseDataFromString(dataFull);
-                    if( parts.length == 2) {
-                        dataFull = parts[1];
-                    }
-                    else
-                        dataFull = "";
                 }
+//                if( !packetStarted){
+//                    if (!data.contains(startChar)) return;
+//                    // need to escape regular expression special characters, such as *.
+//                    // in case the starChar will change to something which will be different from
+//                    // a special characters, than the below line should be change to remove the escape sequence.
+//                    String[] parts1 = data.split("\\"+startChar.toString());
+//                    if( parts.length > 0)
+//                        data = parts[0];
+//                    if( parts.length == 2)
+//                        data = parts[1];
+//                    packetStarted = true;
+//                }
+//                if (data.contains(startChar))
+//                    packetStarted = true;
+//                if (!data.contains(endChar)) {
+//                    dataFull += data;
+//                } else {
+//                    //changing the data from the string in order to update the ui
+////                    parseDataFromString(dataFull);
+//                    data = data.replaceAll("[\\\r|\\\n]", "");
+//                    String[] parts1 = data.split(endChar.toString());
+//                    if( parts.length > 0) {
+//                        dataFull += parts[0] + endChar;
+//                    }
+//                    else
+//                        dataFull += data;
+////                    integerDataFull =
+//                    Log.d(TAG, "data size: " + dataFull);
+//                    parseDataFromString(dataFull);
+//                    if( parts.length == 2) {
+//                        dataFull = parts[1];
+//                    }
+//                    else
+//                        dataFull = "";
+//                    packetStarted = false;
+//                }
 
 //                Log.d(TAG, "data size: " + dataFull);
 
@@ -261,28 +450,45 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                 SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("LAST_MAC", device.getAddress());
-                editor.commit();
+
+                long lastConnectedAt = sharedPreferences.getLong("LAST_CONNECTED_TIME", new Date().getTime());
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                cal.setTime(new Date()); // compute start of the day for the timestamp
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                long from_date = cal.getTimeInMillis();
+                if( lastConnectedAt < from_date){
+                    editor.putLong("CONNECTED_DURATION", 0);
+                }
+                editor.putLong("LAST_CONNECTED_TIME", new Date().getTime());
+                editor.apply();
+
                 Utils.setConnectecMAC(device.getAddress());
                 Utils.setConnectecName(device.getName());
 
                 //running the timer service when the device is connected
 
                 //region timer service
-                Intent serviceIntent = new Intent(MainActivity.this, TimeService.class);
-
-                timeServiceConnection = new ServiceConnection() {
-                    @Override
-                    public void onServiceConnected(ComponentName name, IBinder service) {
-                        TimeService.TimeBinder timeBinder = (TimeService.TimeBinder) service;
-                        mTimeService = timeBinder.getService();
-                    }
-
-                    @Override
-                    public void onServiceDisconnected(ComponentName name) {
-                    }
-                };
-                isServiceBound = getApplicationContext().bindService(serviceIntent, timeServiceConnection, BIND_AUTO_CREATE);
-                //endregion timer service
+//                final Intent serviceIntent = new Intent(MainActivity.this, TimeService.class);
+//                MainActivity.this.startService(serviceIntent);
+//
+//                timeServiceConnection = new ServiceConnection() {
+//                    @Override
+//                    public void onServiceConnected(ComponentName name, IBinder service) {
+//                        TimeService.TimeBinder timeBinder = (TimeService.TimeBinder) service;
+//                        mTimeService = timeBinder.getService();
+//                        mTimeService.startService(serviceIntent);
+//                    }
+//
+//                    @Override
+//                    public void onServiceDisconnected(ComponentName name) {
+//                    }
+//                };
+//                isServiceBound = getApplicationContext().bindService(serviceIntent, timeServiceConnection, BIND_AUTO_CREATE);
+//                Log.d(TAG, "MainActivity isServiceBound="+isServiceBound);
+//                //endregion timer service
             }
 
             @Override
@@ -328,23 +534,139 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
         //adds listener to the bluetooth library
         simpleBluetooth.setSimpleBluetoothListener(simpleBluetoothListener);
         //endregion bluetooth
-        registerReceiver(timerReceiver, new IntentFilter(TimeService.COUNTDOWN_PACKAGE));
+//        registerReceiver(timerReceiver, new IntentFilter(TimeService.COUNTDOWN_PACKAGE));
         registerReceiver(notificationReceiver, new IntentFilter("OPEN_NEW_ACTIVITY"));
+        timerHandler.postDelayed(timerRunnable, 0);
+
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
+    void connectedToChair(String MACAddress){
         SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-        String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
+        String deviceMAC = MACAddress.length() == 0 ? sharedPreferences.getString("LAST_MAC", ""): MACAddress;
         try {
             if (deviceMAC.length() > 0 && !isDeviceConnected && isBluetoothInitized) {
                 simpleBluetooth.connectToBluetoothDevice(deviceMAC);
             }
         }
         catch (IllegalStateException ex){
-            Log.d(TAG, "onStart IllegalStateException" + ex.getMessage());
+            Log.d(TAG, "connectedToChair IllegalStateException" + ex.getMessage());
         }
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    private void updateServerWithEmail(){
+        String endpointURL = Utils.getServerURL() + "/UpdateUserID";
+        // updating the server with the data record
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("device_id", Utils.getDeviceID(this.getBaseContext()));
+            jsonObject.put("user_id", Utils.getUserID(this.getBaseContext()));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        // Instantiate the RequestQueue.
+
+        // Request a string response from the provided URL.
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(endpointURL, jsonObject,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // Display the first 500 characters of the response string.
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                if( error.toString().contains("AuthFailureError")) {
+                    Log.d(TAG, "VolleyError Auth Error");
+                    refreshToken();
+                }
+                else
+                    Log.d(TAG, "VolleyError=" + error.toString());
+            }
+        }
+        ){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("api_key",Utils.getAPITokenId());
+                //..add other headers
+                return params;
+            }
+        };
+        // Add the request to the RequestQueue.
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        helper.add(jsonObjectRequest);
+    }
+    private void signIn() {
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+    private void handleSignInResult(GoogleSignInResult result) {
+        Log.d(TAG, "handleSignInResult:" + result.isSuccess());
+        if (result.isSuccess()) {
+            // Signed in successfully, show authenticated UI.
+            GoogleSignInAccount acct = result.getSignInAccount();
+            firebaseAuthWithGoogle(acct);
+            Log.d(TAG, "account display name=" + acct.getEmail());
+            String token = acct.getIdToken();
+            Log.d(TAG, "token="+token);
+
+//            mStatusTextView.setText(getString(R.string.signed_in_fmt, acct.getDisplayName()));
+//            updateUI(true);
+        } else {
+            // Signed out, show unauthenticated UI.
+//            updateUI(false);
+        }
+    }
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
+
+        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()) {
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "signInWithCredential:success");
+                    FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+                    mUser.getToken(true)
+                    .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                        public void onComplete(@NonNull Task<GetTokenResult> task) {
+                            if (task.isSuccessful()) {
+                                String idToken = task.getResult().getToken();
+                                Utils.setAPITokenId(idToken);
+                                updateServerWithEmail();
+                                isLoggedIn = true;
+                                connectedToChair(""); // Send token to your backend via HTTPS
+                                // ...
+                            } else {
+                                // Handle error -> task.getException();
+                                Crashlytics.logException(task.getException());
+                                Toast.makeText(MainActivity.this, "Getting token failed.",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                } else {
+                    // If sign in fails, display a message to the user.
+                    Log.w(TAG, "signInWithCredential:failure", task.getException());
+                    Crashlytics.logException(task.getException());
+                    Toast.makeText(MainActivity.this, "Authentication failed.",
+                            Toast.LENGTH_SHORT).show();
+//                            updateUI(null);
+                }
+
+                // ...
+            }
+        });
     }
     //endregion main running place
 
@@ -378,25 +700,25 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
     };
 
     //region timer receiver
-    private BroadcastReceiver timerReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getExtras() != null ) {
-                long millisUntilFinished = intent.getLongExtra("countdown", 0);
-//                Log.d(TAG, "onReceive: " + millisUntilFinished);
-                List<Fragment> fragments = getSupportFragmentManager().getFragments();
-                HomeFragment homeFragment = null;
-                for(Fragment f: fragments){
-                    if( f instanceof HomeFragment)
-                        homeFragment = (HomeFragment)f;
-                }
-                if( homeFragment != null)
-                if (homeFragment.circleTimerView != null) {
-                    homeFragment.circleTimerView.setCurrentTime((int) millisUntilFinished);
-                }
-            }
-        }
-    };
+//    private BroadcastReceiver timerReceiver = new BroadcastReceiver() {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            if (intent.getExtras() != null ) {
+//                long millisUntilFinished = intent.getLongExtra("countdown", 0);
+////                Log.d(TAG, "onReceive: " + millisUntilFinished);
+//                List<Fragment> fragments = getSupportFragmentManager().getFragments();
+//                HomeFragment homeFragment = null;
+//                for(Fragment f: fragments){
+//                    if( f instanceof HomeFragment)
+//                        homeFragment = (HomeFragment)f;
+//                }
+////                if( homeFragment != null)
+////                if (homeFragment.circleTimerView != null) {
+////                    homeFragment.circleTimerView.setCurrentTime((int) millisUntilFinished);
+////                }
+//            }
+//        }
+//    };
     //endregion timer receiver
 
     //region permission functions
@@ -489,7 +811,8 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                 if( isBluetoothInitized == true) {
                     String deviceMacAddress = data.getStringExtra(DeviceDialog.DEVICE_DIALOG_DEVICE_ADDRESS_EXTRA);
                     if (requestCode == BLUETOOTH_SCAN_REQUEST) {
-                        simpleBluetooth.connectToBluetoothDevice(deviceMacAddress);
+                        connectedToChair(deviceMacAddress);
+//                        simpleBluetooth.connectToBluetoothDevice(deviceMacAddress);
                     } else {
                         simpleBluetooth.connectToBluetoothServer(deviceMacAddress);
                     }
@@ -497,35 +820,71 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
             }
         }
         if( requestCode == 1001 && resultCode == RESULT_OK){
-            SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-            String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
-            try {
-                if (deviceMAC.length() > 0 && isDeviceConnected == false && isBluetoothInitized) {
-                    simpleBluetooth.connectToBluetoothDevice(deviceMAC);
-                }
-            }
-            catch (IllegalStateException ex){
-                Log.d(TAG, "onStart IllegalStateException" + ex.getMessage());
-            }
+            connectedToChair("");
         }
+        if (requestCode == RC_SIGN_IN) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            handleSignInResult(result);
+        }
+
     }
     //endregion bluetooth manually device choosing result
-
     @Override
     protected void onDestroy() {
+        Log.d(TAG, "MainActivity onDestroy");
         super.onDestroy();
         if( simpleBluetooth != null)
             simpleBluetooth.endSimpleBluetooth();
-        unregisterReceiver(timerReceiver);
+//        unregisterReceiver(timerReceiver);
         unregisterReceiver(notificationReceiver);
-        if( mTimeService != null)
-            mTimeService.onDestroy();
-        if( timeServiceConnection != null && isServiceBound == true)
-            getApplicationContext().unbindService(timeServiceConnection);
+//        if( mTimeService != null)
+//            mTimeService.onDestroy();
+//        if( timeServiceConnection != null && isServiceBound == true) {
+//            getApplicationContext().unbindService(timeServiceConnection);
+//            Log.d(TAG, "MainActivity onDestroy unbindservice");
+//        }
         unregisterReceiver(mReceiver);
 //        unbindService();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshToken();
+    }
+
+    public void refreshToken(){
+        if( !didLanchGoogleActivity ) {
+            didLanchGoogleActivity = true;
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser == null) {
+                signIn();
+            } else {
+                FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+                mUser.getToken(true)
+                        .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                            public void onComplete(@NonNull Task<GetTokenResult> task) {
+                                if (task.isSuccessful()) {
+                                    String idToken = task.getResult().getToken();
+                                    Utils.setAPITokenId(idToken);
+                                    isLoggedIn = true;
+                                    didLanchGoogleActivity = false;
+                                    connectedToChair("");
+                                    updateServerWithEmail();
+                                    // Send token to your backend via HTTPS
+                                    // ...
+                                } else {
+                                    didLanchGoogleActivity = false;
+                                    Crashlytics.logException(task.getException());
+//                                Toast.makeText(MainActivity.this, "Getting token failed.",
+//                                        Toast.LENGTH_SHORT).show();
+                                    // Handle error -> task.getException();
+                                }
+                            }
+                        });
+            }
+        }
+    }
     private void parseDataFromString(String data) {
         //remove the start tag and the end tag from the full string
         data = data.replace("*", "");
@@ -545,55 +904,83 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
         }
     }
 
-    // process the SD data which is an "array" where each element index corrsponds
+    // process the SD data which is an "array" where each element index corresponds
     // to the posture index and the value within that array's cell has the number of samples
     // that were measured using that posture.
     // The posture array is followed by a time stamp
     // The array data might be prefixed with the string "OnOff" which indicates that the sent
     // samples were measured during a time where the device did not have a real-time clock value.
-    private void processSD_Data( String data) {
-        boolean isOnOff = false;
+    private void processSD_Data( String originalData) {
+        try {
+            boolean isOnOff = false;
+            String data = originalData;
 
-        if( data.substring(0, 6).equals("OnOff,")){
-            Log.d(TAG, "Found OnOff");
-            data = data.substring(6);
-            isOnOff = true;
-        }
+            String[] values = data.split(",");
 
-        String[] values = data.split(",");
+            int valueIndex = 0;
+            if (values.length > 0) {
+                Log.d(TAG, "data = " + data);
+                Log.d(TAG, "values.length = " + values.length);
 
-        int valueIndex = 0;
-        if( values.length > 0){
-            Log.d(TAG, "data = " + data);
-            Log.d(TAG, "values.length = " + values.length);
+                int numberOfPossiblePostures = 0;
+                try {
+                    if (values[valueIndex].length() > 0)
+                        numberOfPossiblePostures = Integer.parseInt(values[valueIndex++]);
+                    else
+                        throw new Exception("Wrong value for SD data");
+                    if (numberOfPossiblePostures < 0 || numberOfPossiblePostures > 8)
+                        throw new Exception("Wrong value for SD data");
+                    while (values[valueIndex].equals("OnOff")) {
+                        Log.d(TAG, "Found OnOff");
+//                        data = data.substring(6);
+                        isOnOff = true;
+                        valueIndex++;
+                    }
+                } catch (NumberFormatException e) {
+                    Crashlytics.log(4, TAG, originalData);
+                    Crashlytics.logException(e);
+                    e.printStackTrace();
+                } catch (Exception generalEx) {
+                    Crashlytics.log(4, TAG, originalData);
+                    Crashlytics.logException(generalEx);
+                }
 
-            int numberOfPossiblePostures = 0;
-            try{
-                numberOfPossiblePostures = Integer.parseInt(values[valueIndex++]);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
-                String serverData = (isOnOff ? "OnOff,":"");
+                String serverData = (isOnOff ? "OnOff," : "");
+                serverData += String.valueOf(numberOfPossiblePostures) + ",";
 
-            do {
-                for(int index = 0; index < numberOfPossiblePostures; index++){
+                do {
+                    for (int index = 0; index < numberOfPossiblePostures; index++) {
 //                Log.d(TAG, "Found for posture " + index  + " the count " + values[startOfRow + index]);
-                    serverData += values[valueIndex++] + ",";
-                }
+                        serverData += values[valueIndex++] + ",";
+                    }
 //            Log.d(TAG, "Found the following timestamp " + values[startOfRow + numberOfPossiblePostures + 1]);
-                String deviceTimestampValue = values[valueIndex];
-                long deviceTimestamp = Long.parseLong(values[valueIndex]);
-                if( isOnOff){
-                    deviceTimestamp = System.currentTimeMillis() - deviceTimestamp;
-                    deviceTimestampValue = String.valueOf(deviceTimestamp / 1000);
-                }
-                serverData += deviceTimestampValue + ",";
+                    try {
+                        String deviceTimestampValue = values[valueIndex];
+                        if (isOnOff) {
+                            long deviceTimestamp = Long.parseLong(values[valueIndex]);
+                            deviceTimestamp = System.currentTimeMillis() - deviceTimestamp;
+                            deviceTimestampValue = String.valueOf(deviceTimestamp / 1000);
+                        }
+                        serverData += deviceTimestampValue + ",";
+                    } catch (NumberFormatException e) {
+                        Crashlytics.log(originalData);
+                        Crashlytics.logException(e);
+                        e.printStackTrace();
+                    } catch (Exception generalEx) {
+                        Crashlytics.log(originalData);
+                        Crashlytics.logException(generalEx);
+                    }
 
-                updateServerWithData(serverData, "0", 0);
-                valueIndex++;
-                serverData = "";
+                    updateServerWithData(serverData, "0", 0);
+                    valueIndex++;
+                    serverData = "";
+                }
+                while (valueIndex < (values.length - 1));
             }
-            while( valueIndex < (values.length - 1));
+        } catch(Exception ex){
+            Crashlytics.log(originalData);
+            Crashlytics.logException(ex);
+            ex.printStackTrace();
         }
     }
 
@@ -614,6 +1001,8 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                 try {
                     dataReady.add(Integer.parseInt(number.trim()));
                 } catch (NumberFormatException e) {
+                    Crashlytics.log(4, TAG, data);
+                    Crashlytics.logException(e);
                     e.printStackTrace();
                 }
             }
@@ -649,7 +1038,9 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
             jsonObject.put("seatback_id", Utils.getConnectecMAC());
             jsonObject.put("seatback_name", Utils.getConnectecName());
             jsonObject.put("user_id", Utils.getUserID(this.getBaseContext()));
+            jsonObject.put("device_id", Utils.getDeviceID(this.getBaseContext()));
         } catch (JSONException e) {
+            Crashlytics.logException(e);
             e.printStackTrace();
         }
 
@@ -665,6 +1056,10 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                if( error.toString().contains("AuthFailureError")) {
+                    Log.d(TAG, "VolleyError Auth Error");
+                    refreshToken();
+                }
                 if( didShowError == false) {
                     DialogFragment dialog = new YesNoDialog();
                     Bundle args = new Bundle();
@@ -686,7 +1081,15 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                     didShowError = true;
                 }
             }
-        });
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("api_key", Utils.getAPITokenId());
+                //..add other headers
+                return params;
+            }
+        };
         // Add the request to the RequestQueue.
         jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
                 30000,
@@ -707,6 +1110,11 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
 
             savedNotificationBundle = null;
         }
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(TAG, connectionResult.getErrorMessage());
     }
 
     class UpdateBluetoothMenuTask extends AsyncTask<Void, Void, Void>
@@ -755,16 +1163,8 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                     if( myCountdownTimer == null)
                     myCountdownTimer =    new CountDownTimer(1800000, 10000) {
                         public void onTick(long millisUntilFinished) {
-                            SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-                            String deviceMAC = sharedPreferences.getString("LAST_MAC", "");
-                            try {
-                                if (deviceMAC.length() > 0 && !isDeviceConnected && isBluetoothInitized) {
-                                    simpleBluetooth.connectToBluetoothDevice(deviceMAC);
-                                }
-                            }
-                            catch (IllegalStateException ex){
-                                Log.d(TAG, "onStart IllegalStateException" + ex.getMessage());
-                            }
+                            if( isLoggedIn == true)
+                                connectedToChair("");
                         }
 
                         public void onFinish() {
@@ -799,13 +1199,15 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                     tipsFragment.topPressureMap.setColors(data.dataReady);
                 }
 
-            if( homeFragment != null)
-            if (homeFragment.positionImageView != null && !MainActivity.this.isDestroyed()) {
-                Integer imageAfterComparing = Utils.getImageAfterComparing(data.posture);
-                if (imageAfterComparing != null) {
-                    Glide.with(MainActivity.this)
-                            .load(imageAfterComparing)
-                            .into(homeFragment.positionImageView);
+            if( homeFragment != null && !MainActivity.this.isDestroyed()) {
+                homeFragment.setImageText(data.posture);
+                if (homeFragment.positionImageView != null ) {
+                    Integer imageAfterComparing = Utils.getImageAfterComparing(data.posture);
+                    if (imageAfterComparing != null) {
+                        Glide.with(MainActivity.this)
+                                .load(imageAfterComparing)
+                                .into(homeFragment.positionImageView);
+                    }
                 }
             }
         }

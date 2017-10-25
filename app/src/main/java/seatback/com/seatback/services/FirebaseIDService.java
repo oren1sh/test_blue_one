@@ -1,5 +1,6 @@
 package seatback.com.seatback.services;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -15,8 +16,10 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import seatback.com.seatback.R;
 import seatback.com.seatback.activities.MainActivity;
@@ -54,7 +57,7 @@ public class FirebaseIDService extends FirebaseInstanceIdService {
         // updating the server with the data record
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("user_id", Utils.getUserID(this.getBaseContext()));
+            jsonObject.put("device_id", Utils.getDeviceID(this.getBaseContext()));
             jsonObject.put("token", token);
             jsonObject.put("lang", Locale.getDefault().toString());
         } catch (JSONException e) {
@@ -76,7 +79,15 @@ public class FirebaseIDService extends FirebaseInstanceIdService {
                 Log.d(TAG, error.toString());
                 }
             }
-        );
+        ){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("api_key",Utils.getAPITokenId());
+                //..add other headers
+                return params;
+            }
+        };
         // Add the request to the RequestQueue.
         jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
                 30000,

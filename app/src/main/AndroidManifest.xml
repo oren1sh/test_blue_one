@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name="seatback.com.seatback.services.TimeService" />
+        <!--<service android:name="seatback.com.seatback.services.TimeService" android:exported="true" android:process=":ServiceProcess" />-->
         <service android:name="seatback.com.seatback.services.MyFirebaseMessagingService" android:enabled="true"
             android:exported="true">
             <intent-filter>

@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "821587219419-bi5vih0rospf383uu0eg2i3pfn30rcb8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "seatback.com.seatback",
+            "certificate_hash": "e9820aade3692d31ef70b8ce6bfd59e513e84c42"
+          }
+        },
+        {
+          "client_id": "821587219419-i04e65f2tigmi040taev02oj519ph1ai.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "seatback.com.seatback",
+            "certificate_hash": "d50db88164de71196a7104b974de610d21cb9e9f"
+          }
+        },
+        {
           "client_id": "821587219419-ko36a6tpv91psb5rtvnv6k6eeaf3oijo.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,8 +45,13 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "821587219419-ko36a6tpv91psb5rtvnv6k6eeaf3oijo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "ads_service": {
           "status": 2

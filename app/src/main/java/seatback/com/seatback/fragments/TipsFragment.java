@@ -8,6 +8,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
+
 import seatback.com.seatback.R;
 import seatback.com.seatback.views.PressureMap;
 
@@ -39,6 +42,7 @@ public class TipsFragment extends Fragment {
         bottomPressureMap = (PressureMap) view.findViewById(R.id.pressure_map_bottom);
         topPressureMap.setColors(null);
         bottomPressureMap.setColors(null);
+        Answers.getInstance().logCustom(new CustomEvent("Tips"));
     }
 
 }
