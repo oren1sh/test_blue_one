@@ -50,9 +50,9 @@ public class Utils {
             case 3:
                 return R.drawable.slouching;
             case 4:
-                return R.drawable.lean2good;
+                return R.drawable.lean_left_2good;
             case 5:
-                return R.drawable.lean2good;
+                return R.drawable.lean_right_2good;
             case 6:
             default:
                 break;
@@ -64,8 +64,8 @@ public class Utils {
 if(!BuildConfig.DEBUG)
         return  "http://52.51.116.134:10010";
 else
-//    return  "http://52.51.116.134:10010";
-        return  "http:" + "//10.0.0.11:10020";
+    return  "http://52.51.116.134:10010";
+//        return  "http:" + "//10.0.0.11:10010";
 //        return  "http://192.168.0.94:10020";
     }
 

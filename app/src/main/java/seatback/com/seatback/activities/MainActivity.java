@@ -158,122 +158,135 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
     Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
 
+    private void drawHomeFragment(float percentage, long connectedDuration){
+        List<Fragment> fragments = getSupportFragmentManager().getFragments();
+        HomeFragment homeFragment = null;
+        for(Fragment f: fragments){
+            if( f instanceof HomeFragment)
+                homeFragment = (HomeFragment)f;
+        }
+        if( homeFragment != null){
+            homeFragment.drawPieChart(percentage, connectedDuration);
+        }
+
+    }
     @Override
     public void run() {
         Log.d(TAG, "timerRunnable");
 
-        if( !isLoggedIn){
-            timerHandler.postDelayed(this, refreshHomeViewPeriod );
-            return;
-        }
         SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-        try{
-            connectedDuration = sharedPreferences.getLong("CONNECTED_DURATION", 0);
-        } catch(Exception ex){
-            sharedPreferences.edit().remove("CONNECTED_DURATION").apply();
-        }
-        connectedDuration = sharedPreferences.getLong("CONNECTED_DURATION", 0);
-        connectedDuration += refreshHomeViewPeriod;
-
-        if( isDeviceConnected){
-            sharedPreferences.edit().putLong("CONNECTED_DURATION", connectedDuration).apply();
-        }
-
+        long lastConnectedAt = sharedPreferences.getLong("LAST_CONNECTED_TIME", new Date().getTime());
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.setTime(new Date()); // compute start of the day for the timestamp
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
-        long from_date = cal.getTimeInMillis()/1000;
-
-        cal.set(Calendar.HOUR_OF_DAY, 23);
-        cal.set(Calendar.MINUTE, 59);
-        cal.set(Calendar.SECOND, 59);
-        cal.set(Calendar.MILLISECOND, 999);
-        long to_date = cal.getTimeInMillis()/1000;
-
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("seatback_id", Utils.getConnectecMAC());
-            jsonObject.put("user_id", Utils.getUserID(MainActivity.this));
-            jsonObject.put("from_time", Long.toString(from_date));
-            jsonObject.put("to_time", Long.toString(to_date));
-        } catch (JSONException e) {
-            e.printStackTrace();
+        long from_date = cal.getTimeInMillis() / 1000;
+        // in case the last time we have connected is the previous day, remove any existing drawing from the app.
+        if( lastConnectedAt < from_date){
+            connectedDuration = 0;
+            drawHomeFragment(0f, 0);
         }
 
-        // Instantiate the RequestQueue.
+        if( !isLoggedIn){
+            timerHandler.postDelayed(this, refreshHomeViewPeriod );
+            return;
+        }
 
-        // Request a string response from the provided URL.
-        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Utils.getServerURL() + "/getData", jsonObject,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        Log.d(TAG, "response length="+response.length());
-                        String[] badFields = {"bending_forward", "slump", "tilt_left", "tilt_right"};
-                        String[] goodFields = {"standing", "good"};
-                        for(int i= 0; i< response.length(); i++){
-                            int total = 100;
-                            int good = 0, bad = 0;
-                            try {
-                                JSONObject obj = response.getJSONObject(i);
+        // refresh the data from the server only in case the chair is connected.
+        if( isDeviceConnected){
+            try{
+                connectedDuration = sharedPreferences.getLong("CONNECTED_DURATION", 0);
+            } catch(Exception ex){
+                sharedPreferences.edit().remove("CONNECTED_DURATION").apply();
+            }
+            connectedDuration = sharedPreferences.getLong("CONNECTED_DURATION", 0);
+            connectedDuration += refreshHomeViewPeriod;
+            sharedPreferences.edit().putLong("CONNECTED_DURATION", connectedDuration).apply();
+            cal.set(Calendar.HOUR_OF_DAY, 23);
+            cal.set(Calendar.MINUTE, 59);
+            cal.set(Calendar.SECOND, 59);
+            cal.set(Calendar.MILLISECOND, 999);
+            long to_date = cal.getTimeInMillis()/1000;
 
-                                total = obj.getInt("total");
-                                for(int index = 0; index < badFields.length; index++){
-                                    try {
-                                        bad += obj.getInt(badFields[index]);
-                                    } catch (JSONException e){
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("seatback_id", Utils.getConnectecMAC());
+                jsonObject.put("user_id", Utils.getUserID(MainActivity.this));
+                jsonObject.put("from_time", Long.toString(from_date));
+                jsonObject.put("to_time", Long.toString(to_date));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            // Instantiate the RequestQueue.
+
+            // Request a string response from the provided URL.
+            JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Utils.getServerURL() + "/getData", jsonObject,
+                    new Response.Listener<JSONArray>() {
+                        @Override
+                        public void onResponse(JSONArray response) {
+                            Log.d(TAG, "response length="+response.length());
+                            String[] badFields = {"bending_forward", "slump", "tilt_left", "tilt_right"};
+                            String[] goodFields = {"standing", "good"};
+                            float percentage = 0;
+                            for(int i= 0; i< response.length(); i++){
+                                int total = 100;
+                                int good = 0, bad = 0;
+                                try {
+                                    JSONObject obj = response.getJSONObject(i);
+
+                                    total = obj.getInt("total");
+                                    for(int index = 0; index < badFields.length; index++){
+                                        try {
+                                            bad += obj.getInt(badFields[index]);
+                                        } catch (JSONException e){
+                                        }
                                     }
-                                }
-                                for(int index = 0; index < goodFields.length; index++){
-                                    try {
-                                        good += obj.getInt(goodFields[index]);
-                                    } catch (JSONException e){
+                                    for(int index = 0; index < goodFields.length; index++){
+                                        try {
+                                            good += obj.getInt(goodFields[index]);
+                                        } catch (JSONException e){
+                                        }
                                     }
+                                    percentage = (total > 0 ? ((float) (total-good) / (float) total) : 0f);
                                 }
-                                float percentage = (total > 0 ? ((float) (total-good) / (float) total) : 0f);
-                                List<Fragment> fragments = getSupportFragmentManager().getFragments();
-                                HomeFragment homeFragment = null;
-                                for(Fragment f: fragments){
-                                    if( f instanceof HomeFragment)
-                                        homeFragment = (HomeFragment)f;
-                                }
-                                if( homeFragment != null){
-//                                    percentage = percentage * (float)connectedDuration / 43200000f;
-                                    int val = (int) (percentage * 300000f*720f);
-                                    homeFragment.drawPieChart(percentage, connectedDuration);
+                                catch (JSONException e){
                                 }
                             }
-                            catch (JSONException e){
-                            }
-
-                            }
+                            drawHomeFragment(percentage, connectedDuration);
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    if( error.toString().contains("AuthFailureError")) {
+                        Log.d(TAG, "VolleyError Auth Error");
+                        refreshToken();
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if( error.toString().contains("AuthFailureError")) {
-                    Log.d(TAG, "VolleyError Auth Error");
-                    refreshToken();
+                    else
+                        Log.d(TAG, error.toString());
                 }
-                else
-                Log.d(TAG, error.toString());
-            }
-        }){
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("api_key", Utils.getAPITokenId());
-                //..add other headers
-                return params;
-            }
-        };
+            }){
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("api_key", Utils.getAPITokenId());
+                    //..add other headers
+                    return params;
+                }
+            };
 
-        int socketTimeout = 30000;//30 seconds - change to what you want
-        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
-        jsonArrayRequest.setRetryPolicy(policy);
-        helper.add(jsonArrayRequest);
+            int socketTimeout = 30000;//30 seconds - change to what you want
+            RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+            jsonArrayRequest.setRetryPolicy(policy);
+            helper.add(jsonArrayRequest);
+        }
+        else
+            // in case the device is not connected, show a message in the pie chart center location
+            // but still show any existing drawing we have there.
+            drawHomeFragment(0f, connectedDuration);
+
         timerHandler.postDelayed(this, refreshHomeViewPeriod );
     }
 };

@@ -89,11 +89,15 @@ public class HomeFragment extends Fragment {
     public void drawPieChart(float percentage, long connectedTime){
         List<PieEntry> entries = new ArrayList<>();
         ArrayList<Integer> colors = new ArrayList<Integer>();
-        lastShownValue = percentage;
+        // this allows us to show the last piechart drawing even in the case the device disconnected/app restarted without
+        // a connection. In the case that a day had passed since the last time the device connected, then the connection
+        // time will be zero again and we should remove the last piechart drawing.
+        if( (connectedTime > 0 && percentage > 0) || (connectedTime == 0 && percentage == 0f))
+            lastShownValue = percentage;
         lastConnectedTimeValue = connectedTime;
-        entries.add(new PieEntry(1-percentage, getString(R.string.good_posture)));
+        entries.add(new PieEntry(1-lastShownValue, getString(R.string.good_posture)));
         colors.add(Color.GREEN);
-        entries.add(new PieEntry(percentage, getString(R.string.bad_posture)));
+        entries.add(new PieEntry(lastShownValue, getString(R.string.bad_posture)));
         colors.add(Color.RED);
         Date currentTime = new Date(connectedTime);
         PeriodFormatter durationFormatter;
@@ -109,8 +113,10 @@ public class HomeFragment extends Fragment {
                 .appendSeconds()
                 .toFormatter();
         String periodFormatted = durationFormatter.print(period.toPeriod());
-        pieChart.setCenterText(getResources().getString(R.string.circle_Sitting_time)+"\n" + periodFormatted);
-
+        if( connectedTime > 0 && percentage > 0)
+            pieChart.setCenterText(getResources().getString(R.string.circle_Sitting_time)+"\n" + periodFormatted);
+        else
+            pieChart.setCenterText(getResources().getString(R.string.not_connected)+"\n");
 
         if( entries.size()>0) {
             PieDataSet dataSet = new PieDataSet(entries, "");

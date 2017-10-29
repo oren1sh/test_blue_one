@@ -34,4 +34,5 @@
     <string name="tilt_left">נוטה שמאלה</string>
     <string name="no_data_to_show">אין מידע עבור התקופה המבוקשת.</string>
     <string name="bad_posture">לא תקין</string>
+    <string name="not_connected">אין חיבור לכסא</string>
 </resources>

@@ -34,4 +34,5 @@
     <string name="tilt_left">Tilt Left</string>
     <string name="no_data_to_show">No data for the selected period of time.</string>
     <string name="bad_posture">Bad posture</string>
+    <string name="not_connected">Not Connected to chair</string>
 </resources>
