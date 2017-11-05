@@ -20,45 +20,50 @@
             android:layout_width="0dp"
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
-
-            <seatback.com.seatback.utils.ImageViewWithPrecentage
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                ImageViewWithPrecentage:precentage="0.7"
-                android:id="@+id/img_exercise_top_left"  />
+                android:weightSum="1"
+                android:layout_height="match_parent">
+                <seatback.com.seatback.utils.ImageViewWithPrecentage
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    ImageViewWithPrecentage:precentage="0.7"
+                    android:id="@+id/img_exercise_top_left"  />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@+id/img_exercise_top_left"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/workout_top_left"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="center_vertical"
-                android:paddingTop="70dp"
-                android:text="@string/workout_top_left"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+            </RelativeLayout>
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
-
-            <seatback.com.seatback.utils.ImageViewWithPrecentage
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                ImageViewWithPrecentage:precentage="0.7"
-                android:id="@+id/img_exercise_top_middle"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="center_vertical"
-                android:paddingTop="70dp"
-                android:text="@string/workout_top_middle"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                android:layout_height="match_parent">
+                <seatback.com.seatback.utils.ImageViewWithPrecentage
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    ImageViewWithPrecentage:precentage="0.7"
+                    android:id="@+id/img_exercise_top_middle"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@+id/img_exercise_top_middle"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/workout_top_middle"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </RelativeLayout>
         </FrameLayout>
 
         <FrameLayout
@@ -66,22 +71,27 @@
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
 
-            <seatback.com.seatback.utils.ImageViewWithPrecentage
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                ImageViewWithPrecentage:precentage="0.7"
-                android:id="@+id/img_exercise_top_right"/>
+                android:layout_height="match_parent">
+                <seatback.com.seatback.utils.ImageViewWithPrecentage
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    ImageViewWithPrecentage:precentage="0.7"
+                    android:id="@+id/img_exercise_top_right"/>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="center_vertical"
-                android:paddingTop="70dp"
-                android:text="@string/workout_top_right"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/img_exercise_top_right"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/workout_top_right"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            </RelativeLayout>
         </FrameLayout>
     </LinearLayout>
     <LinearLayout
@@ -94,67 +104,80 @@
             android:layout_width="0dp"
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
-
-            <seatback.com.seatback.utils.ImageViewWithPrecentage
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                ImageViewWithPrecentage:precentage="0.7"
-                android:id="@+id/img_exercise_middle_left"  />
+                android:layout_height="match_parent">
+                <seatback.com.seatback.utils.ImageViewWithPrecentage
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    ImageViewWithPrecentage:precentage="0.7"
+                    android:id="@+id/img_exercise_middle_left"  />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="center_vertical"
-                android:paddingTop="70dp"
-                android:text="@string/workout_middle_left"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/img_exercise_middle_left"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/workout_middle_left"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </RelativeLayout>
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
 
-            <seatback.com.seatback.utils.ImageViewWithPrecentage
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                ImageViewWithPrecentage:precentage="0.7"
-                android:id="@+id/img_exercise_middle_right"/>
+                android:layout_height="match_parent">
+                <seatback.com.seatback.utils.ImageViewWithPrecentage
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    ImageViewWithPrecentage:precentage="0.7"
+                    android:id="@+id/img_exercise_middle_right"/>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="center_vertical"
-                android:paddingTop="70dp"
-                android:text="@string/workout_middle_middle"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/img_exercise_middle_right"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/workout_middle_middle"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            </RelativeLayout>
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
 
-            <seatback.com.seatback.utils.ImageViewWithPrecentage
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                ImageViewWithPrecentage:precentage="0.7"
-                android:id="@+id/img_exercise_middle_right_most"/>
+                android:layout_height="match_parent">
+                <seatback.com.seatback.utils.ImageViewWithPrecentage
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    ImageViewWithPrecentage:precentage="0.7"
+                    android:id="@+id/img_exercise_middle_right_most"/>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="center_vertical"
-                android:paddingTop="70dp"
-                android:text="@string/workout_middle_right"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/img_exercise_middle_right_most"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/workout_middle_right"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            </RelativeLayout>
         </FrameLayout>
         </LinearLayout>
     <LinearLayout
@@ -165,67 +188,81 @@
             android:layout_width="0dp"
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
-
-            <seatback.com.seatback.utils.ImageViewWithPrecentage
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                ImageViewWithPrecentage:precentage="0.7"
-                android:id="@+id/img_exercise_bottom_left"/>
+                android:layout_height="match_parent">
+                <seatback.com.seatback.utils.ImageViewWithPrecentage
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    ImageViewWithPrecentage:precentage="0.7"
+                    android:id="@+id/img_exercise_bottom_left"/>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="center_vertical"
-                android:paddingTop="70dp"
-                android:text="@string/workout_bottom_left"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/img_exercise_bottom_left"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/workout_bottom_left"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            </RelativeLayout>
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
 
-            <seatback.com.seatback.utils.ImageViewWithPrecentage
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                ImageViewWithPrecentage:precentage="0.7"
-                android:id="@+id/img_exercise_bottom_middle"/>
+                android:layout_height="match_parent">
+                <seatback.com.seatback.utils.ImageViewWithPrecentage
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    ImageViewWithPrecentage:precentage="0.7"
+                    android:id="@+id/img_exercise_bottom_middle"/>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="center_vertical"
-                android:paddingTop="70dp"
-                android:text="@string/workout_bottom_middle"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/img_exercise_bottom_middle"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/workout_bottom_middle"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            </RelativeLayout>
         </FrameLayout>
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="@dimen/_125sdp"
             android:layout_weight="1">
 
-            <seatback.com.seatback.utils.ImageViewWithPrecentage
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                ImageViewWithPrecentage:precentage="0.7"
-                android:id="@+id/img_exercise_bottom_right"/>
+                android:layout_height="match_parent">
+                <seatback.com.seatback.utils.ImageViewWithPrecentage
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    ImageViewWithPrecentage:precentage="0.7"
+                    android:id="@+id/img_exercise_bottom_right"/>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:layout_gravity="center_vertical"
-                android:paddingTop="70dp"
-                android:text="@string/workout_bottom_right"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/img_exercise_bottom_right"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/workout_bottom_right"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            </RelativeLayout>
         </FrameLayout>
     </LinearLayout>
     </LinearLayout>
@@ -249,7 +286,7 @@
             android:layout_gravity="bottom"
             android:paddingTop="30dp"
             android:text="@string/workout_top_left"
-            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textAppearance="?android:attr/textAppearanceMedium"
             android:id="@+id/single_workout_text"/>
     </FrameLayout>
 </RelativeLayout>

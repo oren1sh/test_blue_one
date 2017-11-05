@@ -87,9 +87,11 @@ public class WorkoutFragment extends Fragment implements View.OnClickListener{
         getView().findViewById(R.id.full_workout_images).setVisibility(View.INVISIBLE);
 
         ImageView imageToShow  = (ImageView) getView().findViewById(R.id.single_workout_image);
-        imageToShow.setOnClickListener(this);
-        Glide.with(context).load(workoutObjs[resultCode]).into(imageToShow);
-        ((TextView)getView().findViewById(R.id.single_workout_text)).setText(workoutText[resultCode]);
+        if( imageToShow != null) {
+            imageToShow.setOnClickListener(this);
+            Glide.with(context).load(workoutObjs[resultCode]).into(imageToShow);
+            ((TextView) getView().findViewById(R.id.single_workout_text)).setText(workoutText[resultCode]);
+        }
         workoutNumber = resultCode;
     }
 

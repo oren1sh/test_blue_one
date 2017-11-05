@@ -512,7 +512,7 @@ public class StatisticFragment extends Fragment implements OnChartGestureListene
                     try{
                     cnt = obj.getInt("good");
                     if( cnt != 0){
-                        percentage = ((float)cnt/(float)total)*100f;
+                        percentage = calculatePercentage(cnt, total);
                         values[0] = new BarDataPoint(percentage, getString(R.string.good_posture), Color.GREEN);
                         entries.add(new BarEntry(i, percentage));
                     }

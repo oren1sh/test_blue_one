@@ -229,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                         public void onResponse(JSONArray response) {
                             Log.d(TAG, "response length="+response.length());
                             String[] badFields = {"bending_forward", "slump", "tilt_left", "tilt_right"};
-                            String[] goodFields = {"standing", "good"};
+                            String[] goodFields = {"good"};
                             float percentage = 0;
                             for(int i= 0; i< response.length(); i++){
                                 int total = 100;
@@ -250,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
                                         } catch (JSONException e){
                                         }
                                     }
-                                    percentage = (total > 0 ? ((float) (total-good) / (float) total) : 0f);
+                                    percentage = (total > 0 ? ((float) (bad) / (float) total) : 0f);
                                 }
                                 catch (JSONException e){
                                 }
@@ -930,7 +930,8 @@ public class MainActivity extends AppCompatActivity implements WorkoutFragment.O
 
             if( data.contains("OnOff")){
                 isOnOff = true;
-                data = data.replaceAll("[OnOff]", "");
+                data = data.replaceAll("\\b(OnOff,)\\b", "");
+                data = data.replaceAll("\\b(OnOff)\\b", "");
             }
             String[] values = data.split(",");
 
